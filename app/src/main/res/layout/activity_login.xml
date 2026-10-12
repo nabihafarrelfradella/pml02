@@ -37,6 +37,7 @@
                     android:layout_height="72dp"
                     android:layout_gravity="center_horizontal"
                     android:adjustViewBounds="true"
+                    android:contentDescription="Logo MyFin"
                     android:scaleType="fitCenter"
                     android:src="@drawable/logo" />
 
@@ -178,6 +179,10 @@
                         android:id="@+id/tvToRegister"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:minHeight="48dp"
+                        android:minWidth="48dp"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="4dp"
                         android:text="Daftar di sini"
                         android:textColor="#2563EB"
                         android:textSize="13sp"

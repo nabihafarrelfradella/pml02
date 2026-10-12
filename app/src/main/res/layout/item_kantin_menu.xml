@@ -24,7 +24,8 @@
             android:layout_height="70dp"
             android:scaleType="centerCrop"
             android:src="@android:drawable/ic_menu_gallery"
-            android:background="#F1F5F9" />
+            android:background="#F1F5F9"
+            android:importantForAccessibility="no" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -85,9 +86,10 @@
         <!-- Titik 3 Button untuk PopupMenu -->
         <ImageButton
             android:id="@+id/btnMenuAction"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Opsi menu"
             android:src="@android:drawable/ic_menu_more" />
 
     </LinearLayout>
