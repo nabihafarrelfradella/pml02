@@ -1,0 +1,10 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_approval"
+        android:title="Approval Kantin"
+        android:icon="@android:drawable/ic_menu_agenda" />
+    <item
+        android:id="@+id/nav_mahasiswa"
+        android:title="Data Mahasiswa"
+        android:icon="@android:drawable/ic_menu_myplaces" />
+</menu>

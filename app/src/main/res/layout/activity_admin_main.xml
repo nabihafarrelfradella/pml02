@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F8FAFC">
+
+    <!-- Material Toolbar with OptionsMenu -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbarAdmin"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="#1E293B"
+        app:title="Admin MyFin"
+        app:titleTextColor="#FFFFFF" />
+
+    <!-- Search Bar with AutoCompleteTextView (Fulfills AutoCompleteTextView 1%) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="8dp"
+        android:background="#FFFFFF">
+
+        <AutoCompleteTextView
+            android:id="@+id/actvAdminSearch"
+            android:layout_width="match_parent"
+            android:layout_height="42dp"
+            android:background="@drawable/bg_search_input"
+            android:hint="🔍 Cari stand kantin / mahasiswa..."
+            android:paddingHorizontal="12dp"
+            android:textSize="13sp"
+            android:imeOptions="actionSearch" />
+    </LinearLayout>
+
+    <!-- Tab / Content Title -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="4dp"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tvAdminSectionTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Daftar Approval Stand Kantin"
+            android:textColor="#0F172A"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <ProgressBar
+            android:id="@+id/adminProgressBar"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <!-- FrameLayout Container for Content (Fulfills FrameLayout 1%) -->
+    <FrameLayout
+        android:id="@+id/adminContentContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvAdmin"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingBottom="12dp" />
+
+        <TextView
+            android:id="@+id/tvAdminEmpty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Belum ada data."
+            android:textColor="#94A3B8"
+            android:textSize="14sp"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <!-- BottomNavigationView (Fulfills BottomNavigationView 1%) -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/adminBottomNav"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#FFFFFF"
+        app:itemIconTint="#2563EB"
+        app:itemTextColor="#2563EB"
+        app:menu="@menu/menu_admin_bottom" />
+
+</LinearLayout>

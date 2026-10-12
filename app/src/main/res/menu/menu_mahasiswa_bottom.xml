@@ -1,0 +1,18 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_mhs_dashboard"
+        android:title="Dashboard"
+        android:icon="@android:drawable/ic_menu_compass" />
+    <item
+        android:id="@+id/nav_mhs_pembayaran"
+        android:title="Kartu Debit"
+        android:icon="@android:drawable/ic_menu_save" />
+    <item
+        android:id="@+id/nav_mhs_biometric"
+        android:title="Biometrik &amp; QR"
+        android:icon="@android:drawable/ic_menu_camera" />
+    <item
+        android:id="@+id/nav_mhs_riwayat"
+        android:title="Riwayat"
+        android:icon="@android:drawable/ic_menu_recent_history" />
+</menu>

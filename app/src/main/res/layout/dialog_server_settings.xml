@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Pengaturan Alamat Server Laravel"
+        android:textColor="#0F172A"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="Gunakan 10.0.2.2 untuk emulator, atau IP Wi-Fi PC (misal 172.16.48.225) untuk HP fisik:"
+        android:textColor="#64748B"
+        android:textSize="12sp" />
+
+    <EditText
+        android:id="@+id/edtBaseUrl"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:hint="http://10.0.2.2:8000/api/mobile"
+        android:textSize="14sp" />
+</LinearLayout>
