@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="4dp"
+    app:strokeColor="#E2E8F0"
+    app:strokeWidth="1dp"
+    app:cardBackgroundColor="#FFFFFF">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- Header: Judul & Status Badge -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Detail Transaksi"
+                    android:textColor="#0F172A"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvDetailTrxCode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="MYFIN-20261013074245-QY27"
+                    android:textColor="#64748B"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvDetailStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="#D1FAE5"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="4dp"
+                android:text="Berhasil"
+                android:textColor="#065F46"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Garis Pemisah -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginVertical="12dp"
+            android:background="#F1F5F9" />
+
+        <!-- Stand & Waktu -->
+        <TextView
+            android:id="@+id/tvDetailStand"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Stand: Stand Nasi Goreng Bu Sri"
+            android:textColor="#1E293B"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvDetailWaktu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Waktu: 13 Okt 2026, 07:42 WIB"
+            android:textColor="#64748B"
+            android:textSize="12sp" />
+
+        <!-- Garis Pemisah -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginVertical="12dp"
+            android:background="#F1F5F9" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Rincian Pesanan Menu:"
+            android:textColor="#0F172A"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <!-- Container Item Pesanan Dinamis -->
+        <LinearLayout
+            android:id="@+id/layoutDetailItems"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="vertical" />
+
+        <!-- Garis Pemisah -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginVertical="12dp"
+            android:background="#E2E8F0" />
+
+        <!-- Total Pembayaran -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Total Pembayaran"
+                android:textColor="#0F172A"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvDetailTotal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Rp 24.000"
+                android:textColor="#2563EB"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Tombol Tutup -->
+        <Button
+            android:id="@+id/btnDetailClose"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="#2563EB"
+            android:text="Tutup"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

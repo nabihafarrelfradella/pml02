@@ -1,5 +1,6 @@
-﻿package com.example.pml_uts.ui.kantin
+package com.example.pml_uts.ui.kantin
 
+import android.content.res.ColorStateList
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.example.pml_uts.R
 import com.example.pml_uts.data.model.Menu
+import com.example.pml_uts.util.FormatUtil
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -36,8 +38,9 @@ class KantinMenuAdapter(
 
     private fun resolveImageUrl(item: Menu): String {
         val raw = item.fotoUrl ?: item.fotoMenu
-        if (!raw.isNullOrBlank()) {
-            return if (raw.startsWith("http")) raw else "https://myfin.web.id/storage/$raw"
+        val resolved = FormatUtil.resolveImageUrl(raw)
+        if (!resolved.isNullOrBlank()) {
+            return resolved
         }
         val name = (item.namaMenu ?: "").lowercase(Locale.ROOT)
         return when {
@@ -56,7 +59,18 @@ class KantinMenuAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = list[position]
         holder.tvNamaMenu.text = item.namaMenu
-        holder.tvKategoriBadge.text = item.kategori?.replaceFirstChar { it.uppercase() } ?: "Makanan"
+
+        val isMinuman = (item.kategori ?: "").equals("minuman", ignoreCase = true)
+        holder.tvKategoriBadge.text = if (isMinuman) "Minuman" else "Makanan"
+        if (isMinuman) {
+            holder.tvKategoriBadge.setBackgroundResource(R.drawable.bg_badge_kategori)
+            holder.tvKategoriBadge.backgroundTintList = ColorStateList.valueOf(0xFFECFDF5.toInt())
+            holder.tvKategoriBadge.setTextColor(0xFF047857.toInt())
+        } else {
+            holder.tvKategoriBadge.setBackgroundResource(R.drawable.bg_badge_kategori)
+            holder.tvKategoriBadge.backgroundTintList = ColorStateList.valueOf(0xFFEFF6FF.toInt())
+            holder.tvKategoriBadge.setTextColor(0xFF1D4ED8.toInt())
+        }
 
         val formatRupiah = NumberFormat.getCurrencyInstance(Locale("in", "ID"))
         holder.tvHargaMenu.text = formatRupiah.format(item.harga).replace(",00", "")
@@ -69,7 +83,7 @@ class KantinMenuAdapter(
             error(android.R.drawable.ic_menu_gallery)
         }
 
-        // PopupMenu (Fulfills PopupMenu 1%)
+        // PopupMenu Action
         holder.btnMenuAction.setOnClickListener { v ->
             val popup = PopupMenu(v.context, v)
             popup.menuInflater.inflate(R.menu.menu_item_context, popup.menu)
@@ -89,7 +103,7 @@ class KantinMenuAdapter(
             popup.show()
         }
 
-        // ContextMenu via LongClick (Fulfills ContextMenu 1%)
+        // Long click juga membuka menu
         holder.itemView.setOnLongClickListener { v ->
             val popup = PopupMenu(v.context, v)
             popup.menuInflater.inflate(R.menu.menu_item_context, popup.menu)

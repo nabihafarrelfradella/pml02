@@ -7,7 +7,10 @@ data class User(
     val name: String,
     val email: String,
     val role: String,
-    val photo: String? = null
+    val photo: String? = null,
+    @SerializedName("photo_url") val photoUrl: String? = null,
+    @SerializedName("debit_account") val debitAccount: DebitAccount? = null,
+    val biometric: Biometric? = null
 )
 
 data class Kantin(
@@ -59,6 +62,16 @@ data class Menu(
     @SerializedName("foto_url") var fotoUrl: String? = null
 )
 
+data class TransactionDetail(
+    val id: Int? = null,
+    @SerializedName("transaction_id") val transactionId: Int? = null,
+    @SerializedName("menu_id") val menuId: Int? = null,
+    val qty: Int = 1,
+    val price: Double = 0.0,
+    val subtotal: Double = 0.0,
+    val menu: Menu? = null
+)
+
 data class Transaction(
     val id: Int,
     @SerializedName("transaction_code") val transactionCode: String,
@@ -66,7 +79,8 @@ data class Transaction(
     val status: String,
     @SerializedName("created_at") val createdAt: String? = null,
     val kantin: Kantin? = null,
-    val student: User? = null
+    val student: User? = null,
+    val details: List<TransactionDetail>? = null
 )
 
 data class LoginResponse(

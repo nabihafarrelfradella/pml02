@@ -15,6 +15,9 @@ import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Toast
+import android.widget.TextView
+import android.widget.Button
+import android.widget.LinearLayout
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -27,12 +30,43 @@ import com.example.pml_uts.databinding.ActivityMahasiswaMainBinding
 import com.example.pml_uts.databinding.DialogBiometricEnrollBinding
 import com.example.pml_uts.ui.LoginActivity
 import com.example.pml_uts.ui.kantin.KantinTransactionAdapter
+import coil.load
+import com.example.pml_uts.util.FormatUtil
+import com.google.android.material.datepicker.MaterialDatePicker
+import java.util.Date
+import java.util.TimeZone
+import java.text.NumberFormat
+import java.util.Locale
 import com.example.pml_uts.util.NotificationSoundUtil
 import com.google.gson.reflect.TypeToken
 import org.json.JSONObject
 import java.util.Calendar
 
 class MahasiswaMainActivity : AppCompatActivity() {
+
+    private val realTimeHandler = Handler(Looper.getMainLooper())
+    private val realTimeRunnable = object : Runnable {
+        override fun run() {
+            if (!isPollingEnroll) {
+                loadDashboard()
+            }
+            realTimeHandler.postDelayed(this, 4000)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadDashboard()
+        loadRiwayat()
+        realTimeHandler.removeCallbacks(realTimeRunnable)
+        realTimeHandler.postDelayed(realTimeRunnable, 4000)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        realTimeHandler.removeCallbacks(realTimeRunnable)
+    }
+
 
     private lateinit var binding: ActivityMahasiswaMainBinding
     private lateinit var apiClient: ApiClient
@@ -97,11 +131,19 @@ class MahasiswaMainActivity : AppCompatActivity() {
 
     private fun setupRecyclerViews() {
         binding.rvMhsRecentTrx.layoutManager = LinearLayoutManager(this)
-        recentTrxAdapter = KantinTransactionAdapter(emptyList())
+        recentTrxAdapter = KantinTransactionAdapter(
+            list = emptyList(),
+            onItemClick = { trx -> showTransactionDetailDialog(trx) },
+            onItemLongClick = { trx -> showTransactionDetailDialog(trx) }
+        )
         binding.rvMhsRecentTrx.adapter = recentTrxAdapter
 
         binding.rvMhsAllRiwayat.layoutManager = LinearLayoutManager(this)
-        allRiwayatAdapter = KantinTransactionAdapter(emptyList())
+        allRiwayatAdapter = KantinTransactionAdapter(
+            list = emptyList(),
+            onItemClick = { trx -> showTransactionDetailDialog(trx) },
+            onItemLongClick = { trx -> showTransactionDetailDialog(trx) }
+        )
         binding.rvMhsAllRiwayat.adapter = allRiwayatAdapter
     }
 
@@ -199,7 +241,13 @@ class MahasiswaMainActivity : AppCompatActivity() {
             val bank = binding.spnMhsBank.selectedItem.toString()
             val cardNum = binding.edtMhsCardNumber.text.toString().trim()
 
-            if (cardNum.length < 16) {
+            if (cardNum.isEmpty()) {
+                Toast.makeText(this, "Nomor kartu tidak boleh kosong", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val digitsOnly = cardNum.filter { it.isDigit() }
+            if (digitsOnly.length < 8 && !cardNum.contains("*")) {
                 Toast.makeText(this, "Nomor kartu minimal 16 digit angka", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
@@ -208,6 +256,9 @@ class MahasiswaMainActivity : AppCompatActivity() {
                 put("user_id", sessionManager.getUserId())
                 put("bank_name", bank)
                 put("card_number", cardNum)
+                if (cardNum.contains("*")) {
+                    put("card_token_masked", cardNum)
+                }
             }.toString()
 
             apiClient.post("/mahasiswa/pembayaran", json) { success, _, err ->
@@ -215,7 +266,6 @@ class MahasiswaMainActivity : AppCompatActivity() {
                     if (success) {
                         NotificationSoundUtil.playSuccessBeep()
                         Toast.makeText(this, "Kartu Debit Berhasil Disimpan!", Toast.LENGTH_SHORT).show()
-                        binding.edtMhsCardNumber.text?.clear()
                         loadDashboard()
                     } else {
                         Toast.makeText(this, err ?: "Gagal menyimpan kartu", Toast.LENGTH_SHORT).show()
@@ -240,35 +290,124 @@ class MahasiswaMainActivity : AppCompatActivity() {
     // FILTER RENTANG TANGGAL (START DATE -> END DATE)
     // ==========================================
     private fun pickDateRangeFilter() {
-        val c = Calendar.getInstance()
-        val startPicker = DatePickerDialog(this, { _, startYear, startMonth, startDay ->
-            val startDateStr = String.format("%04d-%02d-%02d", startYear, startMonth + 1, startDay)
+        val picker = MaterialDatePicker.Builder.dateRangePicker()
+            .setTitleText("Pilih Rentang Tanggal")
+            .build()
 
-            val endPicker = DatePickerDialog(this, { _, endYear, endMonth, endDay ->
-                val endDateStr = String.format("%04d-%02d-%02d", endYear, endMonth + 1, endDay)
+        picker.addOnPositiveButtonClickListener { selection ->
+            val startMs = selection.first ?: return@addOnPositiveButtonClickListener
+            val endMs = selection.second ?: return@addOnPositiveButtonClickListener
 
-                val actualStart = if (startDateStr <= endDateStr) startDateStr else endDateStr
-                val actualEnd = if (startDateStr <= endDateStr) endDateStr else startDateStr
+            val utcFormat = java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US).apply {
+                timeZone = TimeZone.getTimeZone("UTC")
+            }
+            val displayFormat = java.text.SimpleDateFormat("dd MMM yyyy", Locale("id", "ID")).apply {
+                timeZone = TimeZone.getTimeZone("UTC")
+            }
 
-                binding.btnFilterDate.text = actualStart + " s/d " + actualEnd
+            val actualStart = utcFormat.format(Date(startMs))
+            val actualEnd = utcFormat.format(Date(endMs))
 
-                val filtered = fullRiwayatList.filter { trx ->
-                    val dateOnly = trx.createdAt?.take(10) ?: ""
-                    dateOnly in actualStart..actualEnd
+            binding.btnFilterDate.text = "${displayFormat.format(Date(startMs))} - ${displayFormat.format(Date(endMs))}"
+
+            val filtered = fullRiwayatList.filter { trx ->
+                val dateOnly = trx.createdAt?.take(10) ?: ""
+                dateOnly in actualStart..actualEnd
+            }
+            allRiwayatAdapter.updateData(filtered)
+            binding.tvMhsAllRiwayatEmpty.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
+            Toast.makeText(this, "Menampilkan ${filtered.size} transaksi (${displayFormat.format(Date(startMs))} s/d ${displayFormat.format(Date(endMs))})", Toast.LENGTH_SHORT).show()
+        }
+
+        picker.show(supportFragmentManager, "MATERIAL_DATE_RANGE_PICKER")
+    }
+
+    private fun showTransactionDetailDialog(trx: Transaction) {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_transaction_detail, null)
+        val tvTrxCode = dialogView.findViewById<TextView>(R.id.tvDetailTrxCode)
+        val tvStatus = dialogView.findViewById<TextView>(R.id.tvDetailStatus)
+        val tvStand = dialogView.findViewById<TextView>(R.id.tvDetailStand)
+        val tvWaktu = dialogView.findViewById<TextView>(R.id.tvDetailWaktu)
+        val layoutItems = dialogView.findViewById<android.widget.LinearLayout>(R.id.layoutDetailItems)
+        val tvTotal = dialogView.findViewById<TextView>(R.id.tvDetailTotal)
+        val btnClose = dialogView.findViewById<android.widget.Button>(R.id.btnDetailClose)
+
+        tvTrxCode.text = trx.transactionCode
+        tvStand.text = "Stand: " + (trx.kantin?.namaKantin ?: "Stand Kantin")
+        tvWaktu.text = "Waktu: " + FormatUtil.formatTrxDate(trx.createdAt)
+
+        when (trx.status) {
+            "success" -> {
+                tvStatus.text = "Berhasil"
+                tvStatus.setBackgroundColor(0xFFD1FAE5.toInt())
+                tvStatus.setTextColor(0xFF065F46.toInt())
+            }
+            "pending" -> {
+                tvStatus.text = "Menunggu"
+                tvStatus.setBackgroundColor(0xFFFEF3C7.toInt())
+                tvStatus.setTextColor(0xFF92400E.toInt())
+            }
+            else -> {
+                tvStatus.text = "Gagal"
+                tvStatus.setBackgroundColor(0xFFFEE2E2.toInt())
+                tvStatus.setTextColor(0xFF991B1B.toInt())
+            }
+        }
+
+        val formatRupiah = NumberFormat.getCurrencyInstance(Locale("in", "ID"))
+        tvTotal.text = formatRupiah.format(trx.totalAmount).replace(",00", "")
+
+        layoutItems.removeAllViews()
+        val detailsList = trx.details ?: emptyList()
+        if (detailsList.isNotEmpty()) {
+            for (detail in detailsList) {
+                val row = android.widget.LinearLayout(this).apply {
+                    orientation = android.widget.LinearLayout.HORIZONTAL
+                    layoutParams = android.widget.LinearLayout.LayoutParams(
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                        android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        setMargins(0, 8, 0, 8)
+                    }
+                    gravity = android.view.Gravity.CENTER_VERTICAL
                 }
-                allRiwayatAdapter.updateData(filtered)
-                binding.tvMhsAllRiwayatEmpty.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
-                Toast.makeText(this, "Menampilkan " + filtered.size + " transaksi (" + actualStart + " s/d " + actualEnd + ")", Toast.LENGTH_SHORT).show()
 
-            }, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH))
+                val menuName = detail.menu?.namaMenu ?: "Menu Kantin"
+                val tvItemDesc = TextView(this).apply {
+                    layoutParams = android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                    text = "${detail.qty}x $menuName"
+                    setTextColor(0xFF1E293B.toInt())
+                    textSize = 14f
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                }
 
-            endPicker.setTitle("Pilih Tanggal Selesai")
-            endPicker.show()
+                val subtotalVal = if (detail.subtotal > 0) detail.subtotal else (detail.price * detail.qty)
+                val tvItemSubtotal = TextView(this).apply {
+                    text = formatRupiah.format(subtotalVal).replace(",00", "")
+                    setTextColor(0xFF2563EB.toInt())
+                    textSize = 14f
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                }
 
-        }, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH))
+                row.addView(tvItemDesc)
+                row.addView(tvItemSubtotal)
+                layoutItems.addView(row)
+            }
+        } else {
+            val tvEmptyItem = TextView(this).apply {
+                text = "Pesanan: 1x Transaksi Pembelian Stand Kantin"
+                setTextColor(0xFF475569.toInt())
+                textSize = 13.5f
+            }
+            layoutItems.addView(tvEmptyItem)
+        }
 
-        startPicker.setTitle("Pilih Tanggal Mulai")
-        startPicker.show()
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .create()
+
+        btnClose.setOnClickListener { dialog.dismiss() }
+        dialog.show()
     }
 
     // ==========================================
@@ -321,7 +460,7 @@ class MahasiswaMainActivity : AppCompatActivity() {
         dBinding.bioIcon.imageTintList = ColorStateList.valueOf(0xFF2563EB.toInt())
 
         // Badge connecting
-        dBinding.tvBioDeviceBadge.text = "● Menghubungkan"
+        dBinding.tvBioDeviceBadge.text = "Menghubungkan"
         dBinding.tvBioDeviceBadge.setBackgroundColor(0xFFE0F2FE.toInt())
         dBinding.tvBioDeviceBadge.setTextColor(0xFF0369A1.toInt())
 
@@ -386,7 +525,7 @@ class MahasiswaMainActivity : AppCompatActivity() {
                                     val step = json.optString("step", "step1_wait")
                                     val attempt = json.optInt("attempt", 1)
 
-                                    dBinding.tvBioDeviceBadge.text = "● Sensor Aktif"
+                                    dBinding.tvBioDeviceBadge.text = "Sensor Aktif"
                                     dBinding.tvBioDeviceBadge.setBackgroundColor(0xFFDCFCE7.toInt())
                                     dBinding.tvBioDeviceBadge.setTextColor(0xFF15803D.toInt())
 
@@ -409,7 +548,7 @@ class MahasiswaMainActivity : AppCompatActivity() {
                                     dBinding.tvBioModalTitle.text = "Pendaftaran Berhasil!"
                                     dBinding.tvBioModalSubtitle.text = "Sidik jari Anda telah tersimpan dan aktif."
 
-                                    dBinding.tvBioDeviceBadge.text = "● Berhasil"
+                                    dBinding.tvBioDeviceBadge.text = "Berhasil"
                                     dBinding.tvBioDeviceBadge.setBackgroundColor(0xFFDCFCE7.toInt())
                                     dBinding.tvBioDeviceBadge.setTextColor(0xFF15803D.toInt())
 
@@ -436,7 +575,7 @@ class MahasiswaMainActivity : AppCompatActivity() {
                                     dBinding.tvBioModalTitle.text = "Duplikasi Sidik Jari Terdeteksi"
                                     dBinding.tvBioModalSubtitle.text = "Pendaftaran ditolak demi keamanan akun."
 
-                                    dBinding.tvBioDeviceBadge.text = "● Duplikasi Ditolak"
+                                    dBinding.tvBioDeviceBadge.text = "Duplikasi Ditolak"
                                     dBinding.tvBioDeviceBadge.setBackgroundColor(0xFFFEE2E2.toInt())
                                     dBinding.tvBioDeviceBadge.setTextColor(0xFFB91C1C.toInt())
 
@@ -504,7 +643,7 @@ class MahasiswaMainActivity : AppCompatActivity() {
         dBinding.tvBioModalTitle.text = "Perekaman Gagal"
         dBinding.tvBioModalSubtitle.text = "Sidik jari belum berhasil direkam."
 
-        dBinding.tvBioDeviceBadge.text = "● Gagal"
+        dBinding.tvBioDeviceBadge.text = "Gagal"
         dBinding.tvBioDeviceBadge.setBackgroundColor(0xFFFEE2E2.toInt())
         dBinding.tvBioDeviceBadge.setTextColor(0xFFB91C1C.toInt())
 
@@ -537,6 +676,15 @@ class MahasiswaMainActivity : AppCompatActivity() {
                             binding.tvMhsDashboardEmail.text = studentEmail
                             binding.tvCardHolderDisplay.text = studentName
 
+                            val studentPhoto = FormatUtil.resolveImageUrl(dash.user?.photoUrl ?: dash.user?.photo)
+                            if (!studentPhoto.isNullOrEmpty()) {
+                                binding.imgMhsProfile.load(studentPhoto) {
+                                    crossfade(true)
+                                    placeholder(android.R.drawable.ic_menu_myplaces)
+                                    error(android.R.drawable.ic_menu_myplaces)
+                                }
+                            }
+
                             // Status Debit (Dashboard & Visual Card)
                             if (dash.debit != null) {
                                 binding.tvMhsDebitBadge.text = "Terhubung"
@@ -547,15 +695,26 @@ class MahasiswaMainActivity : AppCompatActivity() {
                                 // Update visual kartu debit di tab Pembayaran
                                 binding.tvCardBankDisplay.text = dash.debit.bankName
                                 binding.tvCardNumberDisplay.text = dash.debit.cardTokenMasked ?: "4811 11** **** 1234"
-                                binding.tvCardStatusDisplay.text = "● Aktif Terhubung"
+                                binding.tvCardStatusDisplay.text = "Aktif Terhubung"
                                 binding.tvCardStatusDisplay.setTextColor(0xFFA7F3D0.toInt())
+
+                                val bIdx = bankList.indexOfFirst { it.contains(dash.debit.bankName, ignoreCase = true) }
+                                if (bIdx != -1 && binding.spnMhsBank.selectedItemPosition != bIdx) {
+                                    binding.spnMhsBank.setSelection(bIdx)
+                                }
+
+                                // Load nomor kartu ke field input agar terisi otomatis sesuai web
+                                val savedCard = dash.debit.cardTokenMasked
+                                if (!savedCard.isNullOrBlank() && binding.edtMhsCardNumber.text.isNullOrEmpty()) {
+                                    binding.edtMhsCardNumber.setText(savedCard)
+                                }
                             } else {
                                 binding.tvMhsDebitBadge.text = "Belum Terhubung"
                                 binding.tvMhsDebitBadge.setBackgroundColor(0xFFFEF3C7.toInt())
                                 binding.tvMhsDebitBadge.setTextColor(0xFF92400E.toInt())
                                 binding.tvMhsDebitInfo.text = "Tautkan kartu debit untuk aktivasi checkout POS."
 
-                                binding.tvCardStatusDisplay.text = "● Belum Tertaut"
+                                binding.tvCardStatusDisplay.text = "Belum Tertaut"
                                 binding.tvCardStatusDisplay.setTextColor(0xFFFDE68A.toInt())
                             }
 
@@ -567,12 +726,12 @@ class MahasiswaMainActivity : AppCompatActivity() {
                                 binding.tvMhsBioBadge.setTextColor(0xFF065F46.toInt())
                                 binding.tvMhsBioInfo.text = "Metode biometrik aktif untuk otorisasi pembayaran instan di kasir."
 
-                                binding.tvMhsBioSlotBadge.text = "ID #" + String.format("%02d", dash.biometric.fingerprintId)
-                                binding.tvMhsBioSlotBadge.visibility = View.VISIBLE
+                                binding.tvMhsBioSlotBadge.visibility = View.GONE
 
                                 val regTime = dash.biometric.registeredAt
                                 if (!regTime.isNullOrBlank()) {
-                                    binding.tvMhsBioTime.text = "Terdaftar: " + regTime
+                                    val formattedReg = FormatUtil.formatTrxDate(regTime)
+                                    binding.tvMhsBioTime.text = "Terdaftar: " + formattedReg
                                     binding.tvMhsBioTime.visibility = View.VISIBLE
                                 } else {
                                     binding.tvMhsBioTime.visibility = View.GONE
@@ -590,10 +749,10 @@ class MahasiswaMainActivity : AppCompatActivity() {
                                 binding.tvTabBioBadge.setBackgroundColor(0xFFD1FAE5.toInt())
                                 binding.tvTabBioBadge.setTextColor(0xFF065F46.toInt())
                                 binding.tvTabBioInfo.text = "Metode biometrik aktif untuk otorisasi pembayaran instan di kasir."
-                                binding.tvTabBioSlotBadge.text = "ID #" + String.format("%02d", dash.biometric.fingerprintId)
-                                binding.tvTabBioSlotBadge.visibility = View.VISIBLE
+                                binding.tvTabBioSlotBadge.visibility = View.GONE
                                 if (!regTime.isNullOrBlank()) {
-                                    binding.tvTabBioTime.text = "Terdaftar: " + regTime
+                                    val formattedReg = FormatUtil.formatTrxDate(regTime)
+                                    binding.tvTabBioTime.text = "Terdaftar: " + formattedReg
                                     binding.tvTabBioTime.visibility = View.VISIBLE
                                 } else {
                                     binding.tvTabBioTime.visibility = View.GONE
@@ -674,6 +833,7 @@ class MahasiswaMainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        realTimeHandler.removeCallbacks(realTimeRunnable)
         isPollingEnroll = false
         enrollDialog?.dismiss()
     }

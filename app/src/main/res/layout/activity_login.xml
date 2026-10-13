@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F9FAFB"
+    android:background="@color/bg_screen"
     android:fillViewport="true">
 
     <LinearLayout
@@ -13,16 +13,16 @@
         android:gravity="center"
         android:padding="20dp">
 
-        <!-- Login Card Container (Matches Web login-card) -->
+        <!-- Login Card Container (Adaptive Day/Night Theme) -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="8dp"
             app:cardCornerRadius="16dp"
             app:cardElevation="2dp"
-            app:strokeColor="#E5E7EB"
+            app:strokeColor="@color/border_card"
             app:strokeWidth="1dp"
-            app:cardBackgroundColor="#FFFFFF">
+            app:cardBackgroundColor="@color/bg_card">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -30,7 +30,7 @@
                 android:orientation="vertical"
                 android:padding="28dp">
 
-                <!-- Logo Custom MyFin Persis Web -->
+                <!-- Logo Custom MyFin -->
                 <ImageView
                     android:id="@+id/imgLogo"
                     android:layout_width="72dp"
@@ -40,14 +40,14 @@
                     android:scaleType="fitCenter"
                     android:src="@drawable/logo" />
 
-                <!-- Title & Subtitle Persis Web -->
+                <!-- Title & Subtitle Adaptive -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
                     android:layout_marginTop="16dp"
                     android:text="Selamat Datang"
-                    android:textColor="#111827"
+                    android:textColor="@color/text_primary"
                     android:textSize="22sp"
                     android:textStyle="bold" />
 
@@ -57,8 +57,32 @@
                     android:layout_gravity="center_horizontal"
                     android:layout_marginTop="4dp"
                     android:text="Silakan masuk ke akun Anda"
-                    android:textColor="#6B7280"
+                    android:textColor="@color/text_secondary"
                     android:textSize="14sp" />
+
+                <!-- Simple Themed Error Alert Banner (Minimalis & Elegan) -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardLoginError"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:visibility="gone"
+                    app:cardCornerRadius="8dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="@color/accent_red"
+                    app:cardBackgroundColor="@color/accent_red_subtle">
+
+                    <TextView
+                        android:id="@+id/tvLoginErrorText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="12dp"
+                        android:text="Email atau kata sandi salah. Silakan periksa kembali."
+                        android:textColor="@color/accent_red"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </com.google.android.material.card.MaterialCardView>
 
                 <!-- Input Email -->
                 <TextView
@@ -66,7 +90,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="24dp"
                     android:text="Email"
-                    android:textColor="#111827"
+                    android:textColor="@color/text_primary"
                     android:textSize="13sp"
                     android:textStyle="bold" />
 
@@ -75,7 +99,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
                     app:hintEnabled="false"
-                    app:boxStrokeColor="#2563EB"
+                    app:boxStrokeColor="@color/primary_blue"
                     app:boxCornerRadiusTopStart="8dp"
                     app:boxCornerRadiusTopEnd="8dp"
                     app:boxCornerRadiusBottomStart="8dp"
@@ -87,7 +111,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Masukkan email"
-                        android:textColorHint="#9CA3AF"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="@color/text_hint"
                         android:inputType="textEmailAddress"
                         android:paddingVertical="12dp"
                         android:textSize="14sp" />
@@ -99,7 +124,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:text="Password"
-                    android:textColor="#111827"
+                    android:textColor="@color/text_primary"
                     android:textSize="13sp"
                     android:textStyle="bold" />
 
@@ -109,7 +134,7 @@
                     android:layout_marginTop="6dp"
                     app:hintEnabled="false"
                     app:passwordToggleEnabled="true"
-                    app:boxStrokeColor="#2563EB"
+                    app:boxStrokeColor="@color/primary_blue"
                     app:boxCornerRadiusTopStart="8dp"
                     app:boxCornerRadiusTopEnd="8dp"
                     app:boxCornerRadiusBottomStart="8dp"
@@ -121,23 +146,14 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Masukkan password"
-                        android:textColorHint="#9CA3AF"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="@color/text_hint"
                         android:inputType="textPassword"
                         android:paddingVertical="12dp"
                         android:textSize="14sp" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- Remember Me CheckBox -->
-                <CheckBox
-                    android:id="@+id/cbRememberMe"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="Ingat Saya (Remember Me)"
-                    android:textColor="#4B5563"
-                    android:textSize="13sp" />
-
-                <!-- Button Masuk (Dark Slate #111827 persis Web) -->
+                <!-- Button Masuk (Adapts cleanly to Dark/Light) -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnLogin"
                     android:layout_width="match_parent"
@@ -145,11 +161,11 @@
                     android:layout_marginTop="20dp"
                     android:text="Masuk ke Portal"
                     android:textAllCaps="false"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/btn_dark_text"
                     android:textSize="15sp"
                     android:textStyle="bold"
                     app:cornerRadius="8dp"
-                    app:backgroundTint="#111827" />
+                    app:backgroundTint="@color/btn_dark" />
 
                 <ProgressBar
                     android:id="@+id/progressBar"
@@ -171,7 +187,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Belum punya akun? "
-                        android:textColor="#6B7280"
+                        android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
 
                     <TextView
@@ -179,17 +195,17 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Daftar di sini"
-                        android:textColor="#2563EB"
+                        android:textColor="@color/primary_blue"
                         android:textSize="13sp"
                         android:textStyle="bold" />
                 </LinearLayout>
 
-                <!-- Subtle Info Demo Credentials Persis Web -->
+                <!-- Subtle Info Demo Credentials -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="24dp"
-                    android:background="#F8FAFC"
+                    android:background="@drawable/bg_tip_box"
                     android:orientation="vertical"
                     android:padding="12dp">
 
@@ -197,7 +213,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Akun Demo Tersedia:"
-                        android:textColor="#374151"
+                        android:textColor="@color/text_primary"
                         android:textSize="12sp"
                         android:textStyle="bold" />
 
@@ -205,8 +221,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="â€¢ admin@polinema.ac.id (Admin)&#10;â€¢ sri@kantin.com (Kantin)&#10;â€¢ budi@student.com (Mahasiswa)"
-                        android:textColor="#6B7280"
+                        android:text="- admin@polinema.ac.id (Admin)&#10;- sri@kantin.com (Kantin)&#10;- budi@student.com (Mahasiswa)"
+                        android:textColor="@color/text_secondary"
                         android:textSize="11sp" />
 
                     <TextView
@@ -214,15 +230,13 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="*Semua password: password"
-                        android:textColor="#9CA3AF"
+                        android:textColor="@color/text_hint"
                         android:textSize="11sp"
                         android:textStyle="italic" />
                 </LinearLayout>
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
-
-
 
     </LinearLayout>
 </ScrollView>

@@ -4,10 +4,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
+import coil.transform.CircleCropTransformation
 import com.example.pml_uts.R
 import com.example.pml_uts.data.model.Kantin
+import com.example.pml_uts.util.FormatUtil
 
 class AdminKantinAdapter(
     private var list: List<Kantin>,
@@ -15,6 +19,7 @@ class AdminKantinAdapter(
 ) : RecyclerView.Adapter<AdminKantinAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val imgKantin: ImageView = view.findViewById(R.id.imgKantin)
         val tvNamaKantin: TextView = view.findViewById(R.id.tvNamaKantin)
         val tvPemilik: TextView = view.findViewById(R.id.tvPemilik)
         val tvNoStand: TextView = view.findViewById(R.id.tvNoStand)
@@ -34,6 +39,19 @@ class AdminKantinAdapter(
         holder.tvPemilik.text = "Pemilik: ${item.user?.name ?: "-"}"
         holder.tvNoStand.text = "Lokasi: ${item.noStand}"
 
+        // Sinkronisasi Foto Pemilik Stand dari Web
+        val photoUrl = FormatUtil.resolveImageUrl(item.user?.photoUrl ?: item.user?.photo)
+        if (!photoUrl.isNullOrEmpty()) {
+            holder.imgKantin.load(photoUrl) {
+                crossfade(true)
+                placeholder(android.R.drawable.ic_menu_agenda)
+                error(android.R.drawable.ic_menu_agenda)
+                transformations(CircleCropTransformation())
+            }
+        } else {
+            holder.imgKantin.setImageResource(android.R.drawable.ic_menu_agenda)
+        }
+
         if (item.statusVerifikasi == "approved") {
             holder.tvStatusBadge.text = "Aktif"
             holder.tvStatusBadge.setBackgroundColor(0xFFD1FAE5.toInt())
@@ -47,6 +65,7 @@ class AdminKantinAdapter(
             holder.btnApprove.setOnClickListener { onApprove(item) }
         }
 
+        // Tampilkan info rekening pencairan yang sinkron dari web
         if (item.rekening != null) {
             holder.tvRekening.text = "Rek: ${item.rekening.bankName} - ${item.rekening.accountNumber}"
         } else {

@@ -28,7 +28,7 @@
             android:layout_width="match_parent"
             android:layout_height="42dp"
             android:background="@drawable/bg_search_input"
-            android:hint="🔍 Cari stand kantin / mahasiswa..."
+            android:hint="Cari stand kantin / mahasiswa..."
             android:paddingHorizontal="12dp"
             android:textSize="13sp"
             android:imeOptions="actionSearch" />

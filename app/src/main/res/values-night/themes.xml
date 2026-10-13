@@ -1,16 +1,26 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Theme.PmlUts" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Primary brand color. -->
-        <item name="colorPrimary">#2563EB</item>
-        <item name="colorPrimaryVariant">#1D4ED8</item>
+    <!-- Base application theme for Night Mode (Guarantees no white-on-white text bug). -->
+    <style name="Theme.PmlUts" parent="Theme.Material3.Light.NoActionBar">
+        <!-- Primary brand color -->
+        <item name="colorPrimary">@color/primary_blue</item>
+        <item name="colorPrimaryVariant">@color/primary_blue_dark</item>
         <item name="colorOnPrimary">#FFFFFF</item>
-        <!-- Secondary brand color. -->
-        <item name="colorSecondary">#10B981</item>
+        <!-- Secondary brand color -->
+        <item name="colorSecondary">@color/accent_green</item>
         <item name="colorSecondaryVariant">#059669</item>
         <item name="colorOnSecondary">#FFFFFF</item>
-        <!-- Status bar color. -->
+        <!-- Status bar color -->
         <item name="android:statusBarColor">#1E293B</item>
         <item name="android:windowLightStatusBar">false</item>
+        <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
+
+        <!-- Clean High-Contrast Surfaces and Texts -->
+        <item name="android:colorBackground">@color/bg_screen</item>
+        <item name="colorSurface">@color/bg_card</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="android:editTextColor">@color/text_primary</item>
+        <item name="android:textColorHint">@color/text_hint</item>
     </style>
 </resources>

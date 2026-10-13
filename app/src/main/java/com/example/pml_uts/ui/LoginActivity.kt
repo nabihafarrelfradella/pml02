@@ -2,13 +2,11 @@ package com.example.pml_uts.ui
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.LayoutInflater
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
-import android.widget.EditText
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import com.example.pml_uts.R
 import com.example.pml_uts.data.local.SessionManager
 import com.example.pml_uts.data.model.LoginResponse
 import com.example.pml_uts.data.remote.ApiClient
@@ -17,6 +15,7 @@ import com.example.pml_uts.ui.admin.AdminMainActivity
 import com.example.pml_uts.ui.kantin.KantinMainActivity
 import com.example.pml_uts.ui.mahasiswa.MahasiswaMainActivity
 import com.example.pml_uts.util.NotificationSoundUtil
+import com.google.android.material.snackbar.Snackbar
 import org.json.JSONObject
 
 class LoginActivity : AppCompatActivity() {
@@ -40,12 +39,6 @@ class LoginActivity : AppCompatActivity() {
             return
         }
 
-        // Terapkan fitur Remember Me: Hanya isi jika user sebelumnya mencentang "Ingat Saya"
-        if (sessionManager.isRememberMe() && sessionManager.getSavedEmail().isNotEmpty()) {
-            binding.cbRememberMe.isChecked = true
-            binding.edtEmail.setText(sessionManager.getSavedEmail())
-        }
-
         setupListeners()
     }
 
@@ -55,7 +48,7 @@ class LoginActivity : AppCompatActivity() {
             val password = binding.edtPassword.text.toString().trim()
 
             if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Silakan isi email dan password Anda", Toast.LENGTH_SHORT).show()
+                showSimpleLoginError("Silakan isi email dan kata sandi Anda.")
                 return@setOnClickListener
             }
 
@@ -66,12 +59,27 @@ class LoginActivity : AppCompatActivity() {
             startActivity(Intent(this, RegisterActivity::class.java))
         }
 
-        // Server URL sudah otomatis tertanam ke domain resmi VPS (https://myfin.web.id)
+        // Otomatis sembunyikan banner error ketika pengguna mulai mengetik ulang
+        val textWatcher = object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (binding.cardLoginError.visibility == View.VISIBLE) {
+                    binding.cardLoginError.visibility = View.GONE
+                }
+                binding.edtPassword.error = null
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        }
+        binding.edtEmail.addTextChangedListener(textWatcher)
+        binding.edtPassword.addTextChangedListener(textWatcher)
     }
 
     private fun performLogin(email: String, pass: String) {
         binding.progressBar.visibility = View.VISIBLE
         binding.btnLogin.isEnabled = false
+        binding.cardLoginError.visibility = View.GONE
+        binding.edtEmail.error = null
+        binding.edtPassword.error = null
 
         val json = JSONObject().apply {
             put("email", email)
@@ -88,36 +96,73 @@ class LoginActivity : AppCompatActivity() {
                         val loginRes = apiClient.gson.fromJson(response, LoginResponse::class.java)
                         if (loginRes.success && loginRes.user != null) {
                             NotificationSoundUtil.playSuccessBeep()
-                            val remember = binding.cbRememberMe.isChecked
                             sessionManager.saveLogin(
                                 id = loginRes.user.id,
                                 name = loginRes.user.name,
                                 email = loginRes.user.email,
                                 role = loginRes.user.role,
-                                remember = remember
+                                remember = true
                             )
 
-                            Toast.makeText(this, "Selamat datang, ${loginRes.user.name}!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this, "Selamat datang, !", Toast.LENGTH_SHORT).show()
                             navigateBasedOnRole(loginRes.user.role)
                             finish()
                         } else {
-                            Toast.makeText(this, loginRes.message, Toast.LENGTH_LONG).show()
+                            showSimpleLoginError(loginRes.message)
                         }
                     } catch (e: Exception) {
-                        Toast.makeText(this, "Gagal memproses respon server: ${e.message}", Toast.LENGTH_LONG).show()
+                        showSimpleLoginError("Respon server tidak valid: ")
                     }
                 } else {
-                    Toast.makeText(this, error ?: "Kredensial tidak cocok atau server belum aktif.", Toast.LENGTH_LONG).show()
+                    var displayMessage = "Email atau kata sandi salah. Silakan periksa kembali."
+                    if (!response.isNullOrEmpty()) {
+                        try {
+                            val errJson = JSONObject(response)
+                            if (errJson.has("message")) {
+                                displayMessage = errJson.getString("message")
+                            }
+                        } catch (_: Exception) {
+                            if (error != null && (error.contains("connect", ignoreCase = true) || error.contains("timeout", ignoreCase = true))) {
+                                displayMessage = "Tidak dapat terhubung ke server. Periksa koneksi internet."
+                            }
+                        }
+                    } else if (error != null) {
+                        if (error.contains("connect", ignoreCase = true) || error.contains("timeout", ignoreCase = true)) {
+                            displayMessage = "Tidak dapat terhubung ke server. Periksa koneksi internet."
+                        }
+                    }
+
+                    showSimpleLoginError(displayMessage)
                 }
             }
         }
     }
+
+    private fun showSimpleLoginError(message: String) {
+        NotificationSoundUtil.playErrorBeep()
+
+        val displayMsg = if (message.contains("Email atau password salah", ignoreCase = true) ||
+            message.contains("Kredensial", ignoreCase = true) ||
+            message.contains("kata sandi", ignoreCase = true)) {
+            "Email atau kata sandi salah. Silakan periksa kembali."
+        } else {
+            message
+        }
+
+        binding.tvLoginErrorText.text = displayMsg
+        binding.cardLoginError.visibility = View.VISIBLE
+        binding.edtPassword.error = "Kata sandi salah"
+        binding.edtPassword.requestFocus()
+
+        Snackbar.make(binding.root, displayMsg, Snackbar.LENGTH_SHORT).show()
+    }
+
     private fun navigateBasedOnRole(role: String) {
         when (role) {
             "admin" -> startActivity(Intent(this, AdminMainActivity::class.java))
             "kantin" -> startActivity(Intent(this, KantinMainActivity::class.java))
             "mahasiswa" -> startActivity(Intent(this, MahasiswaMainActivity::class.java))
-            else -> Toast.makeText(this, "Role tidak dikenali: $role", Toast.LENGTH_SHORT).show()
+            else -> Toast.makeText(this, "Role tidak dikenali: ", Toast.LENGTH_SHORT).show()
         }
     }
 }

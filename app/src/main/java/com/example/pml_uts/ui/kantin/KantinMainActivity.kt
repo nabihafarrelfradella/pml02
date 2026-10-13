@@ -7,6 +7,10 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import com.example.pml_uts.util.FormatUtil
+import com.example.pml_uts.util.SupabaseStorageHelper
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Base64
@@ -14,6 +18,7 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.ImageView
@@ -44,6 +49,35 @@ import java.util.Locale
 
 class KantinMainActivity : AppCompatActivity() {
 
+    private val realTimeHandler = Handler(Looper.getMainLooper())
+    private val realTimeRunnable = object : Runnable {
+        override fun run() {
+            loadDashboard()
+            loadRekening()
+            realTimeHandler.postDelayed(this, 5000)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadDashboard()
+        loadMenus()
+        loadRekening()
+        realTimeHandler.removeCallbacks(realTimeRunnable)
+        realTimeHandler.postDelayed(realTimeRunnable, 5000)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        realTimeHandler.removeCallbacks(realTimeRunnable)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        realTimeHandler.removeCallbacks(realTimeRunnable)
+    }
+
+
     private lateinit var binding: ActivityKantinMainBinding
     private lateinit var apiClient: ApiClient
     private lateinit var sessionManager: SessionManager
@@ -60,6 +94,7 @@ class KantinMainActivity : AppCompatActivity() {
     private var activeCardPreview: View? = null
     private var activeTvStatus: TextView? = null
     private var currentPhotoBase64: String? = null
+    private var currentPhotoUrl: String? = null
 
     // Launcher Kamera (Buka kamera native & ambil foto produk)
     private val takePhotoLauncher = registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap: Bitmap? ->
@@ -104,6 +139,7 @@ class KantinMainActivity : AppCompatActivity() {
         setupBottomNav()
         setupBankSpinner()
         setupListeners()
+        updateCardVisualLive()
 
         loadDashboard()
         loadMenus()
@@ -120,7 +156,11 @@ class KantinMainActivity : AppCompatActivity() {
         binding.rvKantinMenuList.adapter = menuAdapter
 
         binding.rvKantinRecentTrx.layoutManager = LinearLayoutManager(this)
-        trxAdapter = KantinTransactionAdapter(emptyList())
+        trxAdapter = KantinTransactionAdapter(
+            list = emptyList(),
+            onItemClick = { trx -> showTransactionDetailDialog(trx) },
+            onItemLongClick = { trx -> showTransactionDetailDialog(trx) }
+        )
         binding.rvKantinRecentTrx.adapter = trxAdapter
     }
 
@@ -153,6 +193,12 @@ class KantinMainActivity : AppCompatActivity() {
     private fun setupBankSpinner() {
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, bankList)
         binding.spnKantinBank.adapter = adapter
+        binding.spnKantinBank.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                updateCardVisualLive()
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
     }
 
     private fun setupListeners() {
@@ -196,6 +242,15 @@ class KantinMainActivity : AppCompatActivity() {
                         if (dash.success) {
                             binding.tvKantinDashboardNama.text = dash.kantin?.namaKantin ?: sessionManager.getUserName()
                             binding.tvKantinDashboardStand.text = "Lokasi: ${dash.kantin?.noStand ?: "Stand Kantin"}"
+
+                            val kantinPhoto = FormatUtil.resolveImageUrl(dash.kantin?.user?.photoUrl ?: dash.kantin?.user?.photo)
+                            if (!kantinPhoto.isNullOrEmpty()) {
+                                binding.imgKantinProfile.load(kantinPhoto) {
+                                    crossfade(true)
+                                    placeholder(android.R.drawable.ic_menu_agenda)
+                                    error(android.R.drawable.ic_menu_agenda)
+                                }
+                            }
 
                             val formatRupiah = NumberFormat.getCurrencyInstance(Locale("in", "ID"))
                             val rev = dash.summary?.totalRevenue ?: 0L
@@ -419,9 +474,20 @@ class KantinMainActivity : AppCompatActivity() {
             bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream)
             val byteArray = stream.toByteArray()
             currentPhotoBase64 = Base64.encodeToString(byteArray, Base64.NO_WRAP)
-            activeTvStatus?.text = "Foto siap disimpan ke server web"
-            activeTvStatus?.setTextColor(0xFF059669.toInt())
-            Toast.makeText(this, "Foto produk berhasil dipilih!", Toast.LENGTH_SHORT).show()
+
+            activeTvStatus?.text = "Mengunggah foto..."
+            val fileName = "menu_" + System.currentTimeMillis() + ".jpg"
+            SupabaseStorageHelper.uploadMenuPhoto(fileName, byteArray) { success, publicUrl, _ ->
+                if (success && !publicUrl.isNullOrEmpty()) {
+                    currentPhotoUrl = publicUrl
+                    activeTvStatus?.text = "Foto siap disimpan (Cloud Storage)"
+                    activeTvStatus?.setTextColor(0xFF059669.toInt())
+                } else {
+                    activeTvStatus?.text = "Foto siap disimpan (Server)"
+                    activeTvStatus?.setTextColor(0xFF059669.toInt())
+                }
+                Toast.makeText(this@KantinMainActivity, "Foto produk siap disimpan!", Toast.LENGTH_SHORT).show()
+            }
         } catch (e: Exception) {
             Toast.makeText(this, "Gagal memproses foto: ${e.message}", Toast.LENGTH_SHORT).show()
         }
@@ -484,12 +550,35 @@ class KantinMainActivity : AppCompatActivity() {
                             if (idx != -1) {
                                 binding.spnKantinBank.setSelection(idx)
                             }
+                            updateCardVisualLive()
                         }
                     } catch (e: Exception) {
                         e.printStackTrace()
                     }
                 }
             }
+        }
+    }
+
+
+    private fun updateCardVisualLive() {
+        val selectedBank = binding.spnKantinBank.selectedItem?.toString() ?: "Bank BCA"
+        val rawNumber = binding.edtKantinNoRek.text?.toString()?.trim() ?: ""
+        val holder = binding.edtKantinAtasNama.text?.toString()?.trim() ?: ""
+
+        binding.tvKantinCardBankDisplay.text = if (selectedBank.isNotEmpty()) selectedBank else "Bank BCA"
+        binding.tvKantinCardHolderDisplay.text = if (holder.isNotEmpty()) holder else (sessionManager.getUserName().ifEmpty { "Pemilik Stand" })
+
+        binding.tvKantinCardNumberDisplay.text = if (rawNumber.isNotEmpty()) {
+            if (rawNumber.length >= 8) {
+                val first4 = rawNumber.take(4)
+                val last4 = rawNumber.takeLast(4)
+                "$first4 11** **** $last4"
+            } else {
+                rawNumber
+            }
+        } else {
+            "4811 11** **** 1234"
         }
     }
 
@@ -520,6 +609,94 @@ class KantinMainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun showTransactionDetailDialog(trx: com.example.pml_uts.data.model.Transaction) {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_transaction_detail, null)
+        val tvTrxCode = dialogView.findViewById<TextView>(R.id.tvDetailTrxCode)
+        val tvStatus = dialogView.findViewById<TextView>(R.id.tvDetailStatus)
+        val tvStand = dialogView.findViewById<TextView>(R.id.tvDetailStand)
+        val tvWaktu = dialogView.findViewById<TextView>(R.id.tvDetailWaktu)
+        val layoutItems = dialogView.findViewById<android.widget.LinearLayout>(R.id.layoutDetailItems)
+        val tvTotal = dialogView.findViewById<TextView>(R.id.tvDetailTotal)
+        val btnClose = dialogView.findViewById<android.widget.Button>(R.id.btnDetailClose)
+
+        tvTrxCode.text = trx.transactionCode
+        tvStand.text = if (trx.student != null) "Pembeli: ${trx.student.name}" else "Stand Kantin"
+        tvWaktu.text = "Waktu: " + FormatUtil.formatTrxDate(trx.createdAt)
+
+        when (trx.status) {
+            "success" -> {
+                tvStatus.text = "Berhasil"
+                tvStatus.setBackgroundColor(0xFFD1FAE5.toInt())
+                tvStatus.setTextColor(0xFF065F46.toInt())
+            }
+            "pending" -> {
+                tvStatus.text = "Menunggu"
+                tvStatus.setBackgroundColor(0xFFFEF3C7.toInt())
+                tvStatus.setTextColor(0xFF92400E.toInt())
+            }
+            else -> {
+                tvStatus.text = "Gagal"
+                tvStatus.setBackgroundColor(0xFFFEE2E2.toInt())
+                tvStatus.setTextColor(0xFF991B1B.toInt())
+            }
+        }
+
+        val formatRupiah = NumberFormat.getCurrencyInstance(Locale("in", "ID"))
+        tvTotal.text = formatRupiah.format(trx.totalAmount).replace(",00", "")
+
+        layoutItems.removeAllViews()
+        val detailsList = trx.details ?: emptyList()
+        if (detailsList.isNotEmpty()) {
+            for (detail in detailsList) {
+                val row = android.widget.LinearLayout(this).apply {
+                    orientation = android.widget.LinearLayout.HORIZONTAL
+                    layoutParams = android.widget.LinearLayout.LayoutParams(
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                        android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        setMargins(0, 8, 0, 8)
+                    }
+                    gravity = android.view.Gravity.CENTER_VERTICAL
+                }
+
+                val menuName = detail.menu?.namaMenu ?: "Menu Kantin"
+                val tvItemDesc = TextView(this).apply {
+                    layoutParams = android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                    text = "${detail.qty}x $menuName"
+                    setTextColor(0xFF1E293B.toInt())
+                    textSize = 14f
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                }
+
+                val subtotalVal = if (detail.subtotal > 0) detail.subtotal else (detail.price * detail.qty)
+                val tvItemSubtotal = TextView(this).apply {
+                    text = formatRupiah.format(subtotalVal).replace(",00", "")
+                    setTextColor(0xFF2563EB.toInt())
+                    textSize = 14f
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                }
+
+                row.addView(tvItemDesc)
+                row.addView(tvItemSubtotal)
+                layoutItems.addView(row)
+            }
+        } else {
+            val tvEmptyItem = TextView(this).apply {
+                text = "Pesanan: 1x Transaksi Penjualan Stand Kantin"
+                setTextColor(0xFF475569.toInt())
+                textSize = 13.5f
+            }
+            layoutItems.addView(tvEmptyItem)
+        }
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .create()
+
+        btnClose.setOnClickListener { dialog.dismiss() }
+        dialog.show()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {

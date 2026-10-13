@@ -12,4 +12,13 @@ object NotificationSoundUtil {
             e.printStackTrace()
         }
     }
+
+    fun playErrorBeep() {
+        try {
+            val toneG = ToneGenerator(AudioManager.STREAM_NOTIFICATION, 100)
+            toneG.startTone(ToneGenerator.TONE_PROP_BEEP2, 300)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 }

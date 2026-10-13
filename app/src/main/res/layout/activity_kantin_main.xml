@@ -47,38 +47,63 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
                         android:padding="16dp">
 
-                        <TextView
-                            android:id="@+id/tvKantinDashboardNama"
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:text="Kantin Barokah"
-                            android:textColor="#0F172A"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
+                            android:layout_weight="1"
+                            android:orientation="vertical">
 
-                        <TextView
-                            android:id="@+id/tvKantinDashboardStand"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Lokasi: Stand #03"
-                            android:textColor="#64748B"
-                            android:textSize="13sp" />
+                            <TextView
+                                android:id="@+id/tvKantinDashboardNama"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Kantin Barokah"
+                                android:textColor="#0F172A"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
 
-                        <TextView
-                            android:id="@+id/tvKantinDashboardStatus"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:background="#D1FAE5"
-                            android:paddingHorizontal="10dp"
-                            android:paddingVertical="4dp"
-                            android:text="Status: Approved (Aktif)"
-                            android:textColor="#065F46"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
+                            <TextView
+                                android:id="@+id/tvKantinDashboardStand"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Lokasi: Stand #03"
+                                android:textColor="#64748B"
+                                android:textSize="13sp" />
+
+                            <TextView
+                                android:id="@+id/tvKantinDashboardStatus"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:background="#D1FAE5"
+                                android:paddingHorizontal="10dp"
+                                android:paddingVertical="4dp"
+                                android:text="Status: Approved (Aktif)"
+                                android:textColor="#065F46"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <com.google.android.material.card.MaterialCardView
+                            android:layout_width="52dp"
+                            android:layout_height="52dp"
+                            app:cardCornerRadius="26dp"
+                            app:cardElevation="0dp"
+                            app:strokeWidth="1dp"
+                            app:strokeColor="#CBD5E1"
+                            app:cardBackgroundColor="#F1F5F9">
+
+                            <ImageView
+                                android:id="@+id/imgKantinProfile"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:scaleType="centerCrop"
+                                android:src="@android:drawable/ic_menu_agenda" />
+                        </com.google.android.material.card.MaterialCardView>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
@@ -256,6 +281,119 @@
                     android:text="Hasil transaksi penjualan dari checkout POS otomatis disalurkan ke rekening ini."
                     android:textColor="#64748B"
                     android:textSize="13sp" />
+                <!-- VISUALISASI KARTU REKENING PENCAIRAN STAND (PERSIS WEB) -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardKantinRekeningVisual"
+                    android:layout_width="match_parent"
+                    android:layout_height="190dp"
+                    android:layout_marginTop="16dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="6dp"
+                    app:strokeWidth="0dp"
+                    app:cardBackgroundColor="#1E3A8A">
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:padding="18dp">
+
+                        <TextView
+                            android:id="@+id/tvKantinCardBankDisplay"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentStart="true"
+                            android:layout_alignParentTop="true"
+                            android:text="Bank BCA"
+                            android:textColor="#FFFFFF"
+                            android:textSize="17sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.05" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:layout_alignParentTop="true"
+                            android:text="Midtrans 1-Click"
+                            android:textColor="#FFFFFF"
+                            android:textSize="10sp"
+                            android:background="#33FFFFFF"
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="3dp" />
+
+                        <View
+                            android:id="@+id/viewKantinCardChip"
+                            android:layout_width="38dp"
+                            android:layout_height="26dp"
+                            android:layout_below="@id/tvKantinCardBankDisplay"
+                            android:layout_marginTop="12dp"
+                            android:background="#F59E0B" />
+
+                        <TextView
+                            android:id="@+id/tvKantinCardNumberDisplay"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/viewKantinCardChip"
+                            android:layout_marginTop="10dp"
+                            android:text="4811 11** **** 1234"
+                            android:textColor="#FFFFFF"
+                            android:textSize="17sp"
+                            android:fontFamily="monospace"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.1" />
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentBottom="true"
+                            android:layout_alignParentStart="true"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="PEMILIK REKENING"
+                                android:textColor="#CCD8FF"
+                                android:textSize="9sp"
+                                android:letterSpacing="0.05" />
+
+                            <TextView
+                                android:id="@+id/tvKantinCardHolderDisplay"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Pemilik Stand"
+                                android:textColor="#FFFFFF"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentBottom="true"
+                            android:layout_alignParentEnd="true"
+                            android:gravity="end"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="STATUS"
+                                android:textColor="#CCD8FF"
+                                android:textSize="9sp"
+                                android:letterSpacing="0.05" />
+
+                            <TextView
+                                android:id="@+id/tvKantinCardStatusDisplay"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Aktif Terhubung"
+                                android:textColor="#34D399"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+                    </RelativeLayout>
+                </com.google.android.material.card.MaterialCardView>
 
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"

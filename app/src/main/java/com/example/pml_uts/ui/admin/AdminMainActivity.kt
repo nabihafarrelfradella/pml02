@@ -2,6 +2,8 @@ package com.example.pml_uts.ui.admin
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
@@ -26,6 +28,32 @@ import com.google.gson.reflect.TypeToken
 import org.json.JSONObject
 
 class AdminMainActivity : AppCompatActivity() {
+
+    private val realTimeHandler = Handler(Looper.getMainLooper())
+    private val realTimeRunnable = object : Runnable {
+        override fun run() {
+            loadData()
+            realTimeHandler.postDelayed(this, 5000)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadData()
+        realTimeHandler.removeCallbacks(realTimeRunnable)
+        realTimeHandler.postDelayed(realTimeRunnable, 5000)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        realTimeHandler.removeCallbacks(realTimeRunnable)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        realTimeHandler.removeCallbacks(realTimeRunnable)
+    }
+
 
     private lateinit var binding: ActivityAdminMainBinding
     private lateinit var apiClient: ApiClient

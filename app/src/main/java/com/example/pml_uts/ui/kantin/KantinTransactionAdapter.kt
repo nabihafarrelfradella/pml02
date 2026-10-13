@@ -7,11 +7,14 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.pml_uts.R
 import com.example.pml_uts.data.model.Transaction
+import com.example.pml_uts.util.FormatUtil
 import java.text.NumberFormat
 import java.util.Locale
 
 class KantinTransactionAdapter(
-    private var list: List<Transaction>
+    private var list: List<Transaction>,
+    private val onItemClick: ((Transaction) -> Unit)? = null,
+    private val onItemLongClick: ((Transaction) -> Unit)? = null
 ) : RecyclerView.Adapter<KantinTransactionAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -41,7 +44,9 @@ class KantinTransactionAdapter(
 
         val formatRupiah = NumberFormat.getCurrencyInstance(Locale("in", "ID"))
         holder.tvTrxTotal.text = formatRupiah.format(item.totalAmount).replace(",00", "")
-        holder.tvTrxDate.text = item.createdAt ?: "-"
+
+        // Format tanggal rapi standar Indonesia (WIB) bukan string ISO mentah
+        holder.tvTrxDate.text = FormatUtil.formatTrxDate(item.createdAt)
 
         when (item.status) {
             "success" -> {
@@ -59,6 +64,15 @@ class KantinTransactionAdapter(
                 holder.tvTrxStatus.setBackgroundColor(0xFFFEE2E2.toInt())
                 holder.tvTrxStatus.setTextColor(0xFF991B1B.toInt())
             }
+        }
+
+        holder.itemView.setOnClickListener {
+            onItemClick?.invoke(item)
+        }
+
+        holder.itemView.setOnLongClickListener {
+            onItemLongClick?.invoke(item)
+            true
         }
     }
 
