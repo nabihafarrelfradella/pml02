@@ -33,8 +33,12 @@ data class DebitAccount(
     @SerializedName("user_id") val userId: Int? = null,
     @SerializedName("bank_name") val bankName: String,
     @SerializedName("card_token_masked") val cardTokenMasked: String? = null,
-    @SerializedName("is_active") val isActive: Boolean = true
-)
+    @SerializedName("is_active") val isActive: Any? = true
+) {
+    fun isCardActive(): Boolean {
+        return isActive == true || isActive == 1 || isActive == 1.0 || isActive == "1"
+    }
+}
 
 data class Biometric(
     val id: Int? = null,

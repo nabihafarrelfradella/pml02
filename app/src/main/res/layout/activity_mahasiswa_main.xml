@@ -159,7 +159,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Autentikasi Biometrik (AS608)"
+                                android:text="Sidik Jari Biometrik"
                                 android:textColor="#0F172A"
                                 android:textSize="15sp"
                                 android:textStyle="bold" />
@@ -186,13 +186,57 @@
                             android:textColor="#475569"
                             android:textSize="14sp" />
 
+                        <LinearLayout
+                            android:id="@+id/layoutBioDetails"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginTop="4dp">
+
+                            <TextView
+                                android:id="@+id/tvMhsBioSlotBadge"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="ID #01"
+                                android:textColor="#475569"
+                                android:background="#F1F5F9"
+                                android:paddingHorizontal="8dp"
+                                android:paddingVertical="2dp"
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                android:visibility="gone" />
+
+                            <TextView
+                                android:id="@+id/tvMhsBioTime"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:text="Terdaftar: -"
+                                android:textColor="#64748B"
+                                android:textSize="11sp"
+                                android:visibility="gone" />
+                        </LinearLayout>
+
                         <TextView
+                            android:id="@+id/tvMhsBioDesc"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="Sidik jari terdaftar untuk otorisasi pembayaran tanpa kartu."
+                            android:text="Tautkan sidik jari Anda ke sensor scanner kasir untuk pembayaran instan tanpa kartu."
                             android:textColor="#94A3B8"
                             android:textSize="12sp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnMhsRegisterBio"
+                            android:layout_width="match_parent"
+                            android:layout_height="46dp"
+                            android:layout_marginTop="12dp"
+                            android:text="Daftarkan Sidik Jari"
+                            android:textStyle="bold"
+                            android:textSize="13sp"
+                            app:cornerRadius="8dp"
+                            app:backgroundTint="#111827" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
@@ -212,6 +256,17 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:nestedScrollingEnabled="false" />
+
+                <TextView
+                    android:id="@+id/tvMhsRecentEmpty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center"
+                    android:text="Belum ada riwayat transaksi belanja."
+                    android:textColor="#94A3B8"
+                    android:textSize="13sp"
+                    android:visibility="gone" />
 
             </LinearLayout>
         </ScrollView>
@@ -244,6 +299,122 @@
                     android:text="Hubungkan kartu bank Anda untuk aktivasi auto-debit Midtrans di seluruh kasir kantin."
                     android:textColor="#64748B"
                     android:textSize="13sp" />
+
+                
+                <!-- VISUALISASI KARTU DEBIT MIDTRANS (PERSIS WEB) -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardDebitVisual"
+                    android:layout_width="match_parent"
+                    android:layout_height="190dp"
+                    android:layout_marginTop="16dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="6dp"
+                    app:strokeWidth="0dp"
+                    app:cardBackgroundColor="#1E3A8A">
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:padding="18dp">
+
+                        <TextView
+                            android:id="@+id/tvCardBankDisplay"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentStart="true"
+                            android:layout_alignParentTop="true"
+                            android:text="Bank BCA"
+                            android:textColor="#FFFFFF"
+                            android:textSize="17sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.05" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:layout_alignParentTop="true"
+                            android:text="Midtrans 1-Click"
+                            android:textColor="#FFFFFF"
+                            android:textSize="10sp"
+                            android:background="#33FFFFFF"
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="3dp" />
+
+                        <View
+                            android:id="@+id/viewCardChip"
+                            android:layout_width="38dp"
+                            android:layout_height="26dp"
+                            android:layout_below="@id/tvCardBankDisplay"
+                            android:layout_marginTop="12dp"
+                            android:background="#F59E0B" />
+
+                        <TextView
+                            android:id="@+id/tvCardNumberDisplay"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/viewCardChip"
+                            android:layout_marginTop="10dp"
+                            android:text="4811 11** **** 1234"
+                            android:textColor="#FFFFFF"
+                            android:textSize="17sp"
+                            android:fontFamily="monospace"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.1" />
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentBottom="true"
+                            android:layout_alignParentStart="true"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="PEMEGANG KARTU"
+                                android:textColor="#CCD8FF"
+                                android:textSize="9sp"
+                                android:letterSpacing="0.05" />
+
+                            <TextView
+                                android:id="@+id/tvCardHolderDisplay"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Mahasiswa"
+                                android:textColor="#FFFFFF"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentBottom="true"
+                            android:layout_alignParentEnd="true"
+                            android:gravity="end"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="STATUS"
+                                android:textColor="#CCD8FF"
+                                android:textSize="9sp"
+                                android:letterSpacing="0.05" />
+
+                            <TextView
+                                android:id="@+id/tvCardStatusDisplay"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="● Belum Tertaut"
+                                android:textColor="#FDE68A"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                    </RelativeLayout>
+                </com.google.android.material.card.MaterialCardView>
 
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
@@ -318,7 +489,7 @@
             </LinearLayout>
         </ScrollView>
 
-        <!-- TAB 3: BIOMETRIK & QR CODE (TERINTEGRASI IOT) -->
+                <!-- TAB 3: SIDIK JARI BIOMETRIK (TERPISAH & TANPA QR) -->
         <ScrollView
             android:id="@+id/viewMhsBiometric"
             android:layout_width="match_parent"
@@ -329,13 +500,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="18dp"
-                android:gravity="center_horizontal">
+                android:padding="18dp">
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Autentikasi IoT &amp; QR Code"
+                    android:text="Pendaftaran Sidik Jari"
                     android:textColor="#0F172A"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -344,19 +514,19 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="Integrasi hardware sensor sidik jari ESP32 NodeMCU &amp; QR identitas belanja."
+                    android:text="Tautkan sidik jari Anda ke modul sensor scanner kasir secara real-time untuk pembayaran instan."
                     android:textColor="#64748B"
                     android:textSize="13sp" />
 
-                <!-- CARD INTEGRASI IOT (Poin 28 - 10%) -->
+                <!-- CARD STATUS SIDIK JARI -->
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
                     app:cardCornerRadius="14dp"
                     app:cardElevation="2dp"
-                    app:cardBackgroundColor="#EFF6FF"
-                    app:strokeColor="#BFDBFE"
+                    app:cardBackgroundColor="#FFFFFF"
+                    app:strokeColor="#E2E8F0"
                     app:strokeWidth="1dp">
 
                     <LinearLayout
@@ -368,110 +538,94 @@
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
 
                             <TextView
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Hardware Sensor IoT (AS608)"
-                                android:textColor="#1E40AF"
+                                android:text="Status Sensor Biometrik"
+                                android:textColor="#0F172A"
                                 android:textSize="15sp"
                                 android:textStyle="bold" />
 
                             <TextView
-                                android:id="@+id/tvIotStatusBadge"
+                                android:id="@+id/tvTabBioBadge"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:background="#D1FAE5"
+                                android:textColor="#065F46"
                                 android:paddingHorizontal="8dp"
                                 android:paddingVertical="3dp"
-                                android:text="ESP32: Online"
-                                android:textColor="#065F46"
+                                android:text="Status"
                                 android:textSize="11sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
 
                         <TextView
+                            android:id="@+id/tvTabBioInfo"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="6dp"
-                            android:text="Tekan tombol di bawah untuk mengaktifkan sensor sidik jari optik AS608 pada modul ESP32 secara real-time:"
+                            android:text="Memuat status sensor..."
                             android:textColor="#475569"
-                            android:textSize="12sp" />
+                            android:textSize="14sp" />
 
-                        <!-- Tombol Pemicu IoT Real-Time (Fulfills Poin 28 - 10%!) -->
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnTriggerIotEnroll"
+                        <LinearLayout
+                            android:id="@+id/layoutTabBioDetails"
                             android:layout_width="match_parent"
-                            android:layout_height="50dp"
-                            android:layout_marginTop="12dp"
-                            android:text="AKTIFKAN SENSOR IOT (ESP32)"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginTop="6dp">
+
+                            <TextView
+                                android:id="@+id/tvTabBioSlotBadge"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="ID #01"
+                                android:textColor="#475569"
+                                android:background="#F1F5F9"
+                                android:paddingHorizontal="8dp"
+                                android:paddingVertical="2dp"
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                android:visibility="gone" />
+
+                            <TextView
+                                android:id="@+id/tvTabBioTime"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:text="Terdaftar: -"
+                                android:textColor="#64748B"
+                                android:textSize="11sp"
+                                android:visibility="gone" />
+                        </LinearLayout>
+
+                        <!-- Tombol Perekaman Real-time -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnTabTriggerBioEnroll"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:layout_marginTop="14dp"
+                            android:text="DAFTARKAN SIDIK JARI"
                             android:textStyle="bold"
                             android:textSize="13sp"
                             app:cornerRadius="8dp"
-                            app:backgroundTint="#2563EB" />
+                            app:backgroundTint="#111827" />
 
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- CARD QR CODE (Poin 25 - 2%) -->
+                <!-- CARD PANDUAN LANGKAH (PERSIS ALUR WEB) -->
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="14dp"
                     app:cardCornerRadius="14dp"
-                    app:cardElevation="2dp"
-                    app:cardBackgroundColor="#FFFFFF"
-                    app:strokeColor="#E2E8F0"
-                    app:strokeWidth="1dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="16dp"
-                        android:gravity="center_horizontal">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="QR Code Identitas Kasir"
-                            android:textColor="#0F172A"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
-
-                        <!-- Generated QR Bitmap via ZXing -->
-                        <ImageView
-                            android:id="@+id/imgMhsQrCode"
-                            android:layout_width="160dp"
-                            android:layout_height="160dp"
-                            android:layout_marginTop="10dp"
-                            android:background="#F8FAFC"
-                            android:padding="8dp" />
-
-                        <TextView
-                            android:id="@+id/tvMhsQrString"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
-                            android:text="MYFIN:STUDENT:1"
-                            android:textColor="#64748B"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-
-                <!-- Input Slot Alternatif Manual -->
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    app:cardCornerRadius="14dp"
-                    app:cardElevation="2dp"
-                    app:cardBackgroundColor="#FFFFFF"
+                    app:cardBackgroundColor="#F8FAFC"
                     app:strokeColor="#E2E8F0"
                     app:strokeWidth="1dp">
 
@@ -484,32 +638,19 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Atur Nomor Slot Manual (Cadangan)"
-                            android:textColor="#0F172A"
+                            android:text="Panduan Perekaman Sensor"
+                            android:textColor="#1E293B"
                             android:textSize="14sp"
                             android:textStyle="bold" />
 
-                        <com.google.android.material.textfield.TextInputLayout
-                            android:layout_width="match_parent"
+                        <TextView
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
-                            android:hint="Nomor Slot ID (1 - 127)"
-                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/edtMhsFingerprintId"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:inputType="number" />
-                        </com.google.android.material.textfield.TextInputLayout>
-
-                        <Button
-                            android:id="@+id/btnSaveMhsBio"
-                            android:layout_width="match_parent"
-                            android:layout_height="44dp"
-                            android:layout_marginTop="10dp"
-                            android:text="Simpan Slot Manual"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+                            android:text="1. Klik tombol Daftarkan Sidik Jari di atas.\n2. Tempelkan jari telunjuk Anda rata pada kaca sensor di meja kasir.\n3. Angkat sejenak saat sensor berkedip, lalu tempelkan kembali untuk konfirmasi.\n4. Setelah sukses, sidik jari langsung aktif untuk pembayaran kasir tanpa kartu."
+                            android:textColor="#64748B"
+                            android:textSize="12sp"
+                            android:lineSpacingExtra="3dp" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
@@ -517,6 +658,8 @@
         </ScrollView>
 
         <!-- TAB 4: RIWAYAT TRANSAKSI DENGAN DATEPICKER -->
+
+
         <LinearLayout
             android:id="@+id/viewMhsRiwayat"
             android:layout_width="match_parent"
@@ -558,6 +701,17 @@
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
                 android:paddingVertical="8dp" />
+
+            <TextView
+                android:id="@+id/tvMhsAllRiwayatEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="30dp"
+                android:gravity="center"
+                android:text="Tidak ada transaksi pada rentang tanggal ini."
+                android:textColor="#94A3B8"
+                android:textSize="13sp"
+                android:visibility="gone" />
 
         </LinearLayout>
 

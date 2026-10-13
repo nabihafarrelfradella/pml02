@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/nav_mhs_dashboard"
@@ -9,7 +10,7 @@
         android:icon="@android:drawable/ic_menu_save" />
     <item
         android:id="@+id/nav_mhs_biometric"
-        android:title="Biometrik &amp; QR"
+        android:title="Sidik Jari"
         android:icon="@android:drawable/ic_menu_camera" />
     <item
         android:id="@+id/nav_mhs_riwayat"
