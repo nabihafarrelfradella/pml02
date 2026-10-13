@@ -8,10 +8,17 @@ import android.os.Looper
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.pml_uts.R
 import com.example.pml_uts.data.local.SessionManager
@@ -44,9 +51,19 @@ class MahasiswaMainActivity : AppCompatActivity() {
     private var enrollDialog: AlertDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         binding = ActivityMahasiswaMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = false
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            binding.toolbarMhs.updateLayoutParams { height = ViewGroup.LayoutParams.WRAP_CONTENT }
+            binding.toolbarMhs.updatePadding(top = insets.top)
+            binding.mhsBottomNav.updatePadding(bottom = insets.bottom)
+            windowInsets
+        }
 
         setSupportActionBar(binding.toolbarMhs)
         apiClient = ApiClient(this)
@@ -396,6 +413,7 @@ class MahasiswaMainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         isPollingEnroll = false
+        handler.removeCallbacksAndMessages(null)
         enrollDialog?.dismiss()
     }
 
