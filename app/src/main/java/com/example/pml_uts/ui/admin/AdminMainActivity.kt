@@ -76,11 +76,13 @@ class AdminMainActivity : AppCompatActivity() {
                     binding.tvAdminSectionTitle.text = "Daftar Approval Stand Kantin"
                     binding.rvAdmin.adapter = kantinAdapter
                     kantinAdapter.updateData(allKantins)
+                    binding.tvAdminEmpty.visibility = if (allKantins.isEmpty()) View.VISIBLE else View.GONE
                 }
                 R.id.nav_mahasiswa -> {
                     binding.tvAdminSectionTitle.text = "Data Mahasiswa Terdaftar"
                     binding.rvAdmin.adapter = mahasiswaAdapter
                     mahasiswaAdapter.updateData(allMahasiswas)
+                    binding.tvAdminEmpty.visibility = if (allMahasiswas.isEmpty()) View.VISIBLE else View.GONE
                 }
             }
             true
@@ -107,6 +109,7 @@ class AdminMainActivity : AppCompatActivity() {
                 }
             }
             kantinAdapter.updateData(filtered)
+            binding.tvAdminEmpty.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
         } else {
             val filtered = if (query.isEmpty()) allMahasiswas else {
                 allMahasiswas.filter {
@@ -114,6 +117,7 @@ class AdminMainActivity : AppCompatActivity() {
                 }
             }
             mahasiswaAdapter.updateData(filtered)
+            binding.tvAdminEmpty.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
         }
     }
 
@@ -136,6 +140,7 @@ class AdminMainActivity : AppCompatActivity() {
 
                         if (currentTab == R.id.nav_approval) {
                             kantinAdapter.updateData(allKantins)
+                            binding.tvAdminEmpty.visibility = if (allKantins.isEmpty()) View.VISIBLE else View.GONE
                         }
                     } catch (e: Exception) {
                         e.printStackTrace()
@@ -157,6 +162,7 @@ class AdminMainActivity : AppCompatActivity() {
 
                         if (currentTab == R.id.nav_mahasiswa) {
                             mahasiswaAdapter.updateData(allMahasiswas)
+                            binding.tvAdminEmpty.visibility = if (allMahasiswas.isEmpty()) View.VISIBLE else View.GONE
                         }
                     } catch (e: Exception) {
                         e.printStackTrace()

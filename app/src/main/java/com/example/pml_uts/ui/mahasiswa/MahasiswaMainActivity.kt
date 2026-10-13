@@ -200,17 +200,19 @@ class MahasiswaMainActivity : AppCompatActivity() {
 
             DatePickerDialog(this, { _, selectedYear, selectedMonth, selectedDay ->
                 val dateStr = String.format("%04d-%02d-%02d", selectedYear, selectedMonth + 1, selectedDay)
-                binding.btnFilterDate.text = "ðŸ“… Tanggal: $dateStr"
+                binding.btnFilterDate.text = "📅 Tanggal: $dateStr"
 
                 val filtered = fullRiwayatList.filter { it.createdAt?.startsWith(dateStr) ?: false }
                 allRiwayatAdapter.updateData(filtered)
+                binding.tvMhsRiwayatEmpty.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
                 Toast.makeText(this, "Memfilter transaksi tanggal $dateStr", Toast.LENGTH_SHORT).show()
             }, year, month, day).show()
         }
 
         binding.btnResetDateFilter.setOnClickListener {
-            binding.btnFilterDate.text = "ðŸ“… Filter Tanggal (DatePicker)"
+            binding.btnFilterDate.text = "📅 Filter Tanggal (DatePicker)"
             allRiwayatAdapter.updateData(fullRiwayatList)
+            binding.tvMhsRiwayatEmpty.visibility = if (fullRiwayatList.isEmpty()) View.VISIBLE else View.GONE
         }
     }
 
@@ -382,6 +384,7 @@ class MahasiswaMainActivity : AppCompatActivity() {
                         val type = object : TypeToken<List<Transaction>>() {}.type
                         fullRiwayatList = apiClient.gson.fromJson(arrayStr, type)
                         allRiwayatAdapter.updateData(fullRiwayatList)
+                        binding.tvMhsRiwayatEmpty.visibility = if (fullRiwayatList.isEmpty()) View.VISIBLE else View.GONE
                     } catch (e: Exception) {
                         e.printStackTrace()
                     }

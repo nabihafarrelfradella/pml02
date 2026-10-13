@@ -164,6 +164,7 @@ class KantinMainActivity : AppCompatActivity() {
                     it.namaMenu.lowercase().contains(query) || (it.kategori?.lowercase()?.contains(query) ?: false)
                 }
                 menuAdapter.updateData(filtered)
+                binding.tvKantinMenuEmpty.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
             }
             override fun afterTextChanged(s: Editable?) {}
         })
@@ -237,6 +238,7 @@ class KantinMainActivity : AppCompatActivity() {
                         allMenus.clear()
                         allMenus.addAll(list)
                         menuAdapter.updateData(allMenus)
+                        binding.tvKantinMenuEmpty.visibility = if (allMenus.isEmpty()) View.VISIBLE else View.GONE
 
                         dbHelper.saveMenuCache(allMenus)
 
@@ -251,6 +253,9 @@ class KantinMainActivity : AppCompatActivity() {
                         allMenus.clear()
                         allMenus.addAll(cached)
                         menuAdapter.updateData(allMenus)
+                        binding.tvKantinMenuEmpty.visibility = if (allMenus.isEmpty()) View.VISIBLE else View.GONE
+                    } else {
+                        binding.tvKantinMenuEmpty.visibility = View.VISIBLE
                     }
                 }
             }
