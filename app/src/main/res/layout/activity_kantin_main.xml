@@ -238,6 +238,16 @@
                     android:clipToPadding="false"
                     android:paddingBottom="72dp" />
 
+                <TextView
+                    android:id="@+id/tvKantinMenuEmpty"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:text="Tidak ada menu untuk ditampilkan"
+                    android:textColor="#94A3B8"
+                    android:textSize="14sp"
+                    android:visibility="gone" />
+
                 <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
                     android:id="@+id/fabAddMenu"
                     android:layout_width="wrap_content"
@@ -460,6 +470,11 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="end"
                             android:layout_marginTop="8dp"
+                            android:minHeight="48dp"
+                            android:minWidth="48dp"
+                            android:gravity="center_vertical|end"
+                            android:paddingVertical="8dp"
+                            android:paddingHorizontal="4dp"
                             android:text="Gunakan Nomor Kartu Sandbox Demo"
                             android:textColor="#2563EB"
                             android:textSize="12sp"

@@ -18,6 +18,7 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.EditText
@@ -26,10 +27,16 @@ import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.LinearLayoutManager
 import coil.load
 import com.example.pml_uts.R
@@ -95,13 +102,14 @@ class KantinMainActivity : AppCompatActivity() {
     private var activeTvStatus: TextView? = null
     private var currentPhotoBase64: String? = null
     private var currentPhotoUrl: String? = null
+    private var isProcessingPhoto = false
+    private var photoRequestId = 0
 
     // Launcher Kamera (Buka kamera native & ambil foto produk)
     private val takePhotoLauncher = registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap: Bitmap? ->
         if (bitmap != null) {
             activeCardPreview?.visibility = View.VISIBLE
             activeImgPreview?.visibility = View.VISIBLE
-            activeImgPreview?.setImageBitmap(bitmap)
             processBitmapToBase64(bitmap)
         }
     }
@@ -111,7 +119,6 @@ class KantinMainActivity : AppCompatActivity() {
         if (uri != null) {
             activeCardPreview?.visibility = View.VISIBLE
             activeImgPreview?.visibility = View.VISIBLE
-            activeImgPreview?.setImageURI(uri)
             processUriToBase64(uri)
         }
     }
@@ -126,9 +133,19 @@ class KantinMainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         binding = ActivityKantinMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = false
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            binding.toolbarKantin.updateLayoutParams { height = ViewGroup.LayoutParams.WRAP_CONTENT }
+            binding.toolbarKantin.updatePadding(top = insets.top)
+            binding.kantinBottomNav.updatePadding(bottom = insets.bottom)
+            windowInsets
+        }
 
         setSupportActionBar(binding.toolbarKantin)
         apiClient = ApiClient(this)
@@ -210,6 +227,7 @@ class KantinMainActivity : AppCompatActivity() {
                     it.namaMenu.lowercase().contains(query) || (it.kategori?.lowercase()?.contains(query) ?: false)
                 }
                 menuAdapter.updateData(filtered)
+                binding.tvKantinMenuEmpty.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
             }
             override fun afterTextChanged(s: Editable?) {}
         })
@@ -292,6 +310,7 @@ class KantinMainActivity : AppCompatActivity() {
                         allMenus.clear()
                         allMenus.addAll(list)
                         menuAdapter.updateData(allMenus)
+                        binding.tvKantinMenuEmpty.visibility = if (allMenus.isEmpty()) View.VISIBLE else View.GONE
 
                         dbHelper.saveMenuCache(allMenus)
 
@@ -306,6 +325,9 @@ class KantinMainActivity : AppCompatActivity() {
                         allMenus.clear()
                         allMenus.addAll(cached)
                         menuAdapter.updateData(allMenus)
+                        binding.tvKantinMenuEmpty.visibility = if (allMenus.isEmpty()) View.VISIBLE else View.GONE
+                    } else {
+                        binding.tvKantinMenuEmpty.visibility = View.VISIBLE
                     }
                 }
             }
@@ -325,7 +347,10 @@ class KantinMainActivity : AppCompatActivity() {
         val tvStatus = dialogView.findViewById<TextView>(R.id.tvUploadStatus)
 
         // Reset state upload foto
+        photoRequestId++
         currentPhotoBase64 = null
+        currentPhotoUrl = null
+        isProcessingPhoto = false
         activeImgPreview = imgPreview
         activeCardPreview = cardPreview
         activeTvStatus = tvStatus
@@ -342,44 +367,88 @@ class KantinMainActivity : AppCompatActivity() {
             pickImageLauncher.launch("image/*")
         }
 
-        AlertDialog.Builder(this)
+        val dialog = AlertDialog.Builder(this)
             .setView(dialogView)
-            .setPositiveButton("Simpan Menu") { _, _ ->
-                val nama = edtNama.text.toString().trim()
-                val hargaStr = edtHarga.text.toString().trim()
-                val stockStr = edtStock.text.toString().trim()
-                val kategori = if (rbMakanan.isChecked) "makanan" else "minuman"
+            .setPositiveButton("Simpan Menu", null)
+            .setNegativeButton("Batal", null)
+            .create()
 
-                if (nama.isEmpty() || hargaStr.isEmpty() || stockStr.isEmpty()) {
-                    Toast.makeText(this, "Nama, harga, dan stok wajib diisi!", Toast.LENGTH_SHORT).show()
-                    return@setPositiveButton
+        dialog.setOnDismissListener {
+            photoRequestId++
+            isProcessingPhoto = false
+        }
+        dialog.show()
+
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+            if (isProcessingPhoto) {
+                Toast.makeText(this, "Memproses foto...", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            val nama = edtNama.text.toString().trim()
+            val hargaStr = edtHarga.text.toString().trim()
+            val stockStr = edtStock.text.toString().trim()
+            val kategori = if (rbMakanan.isChecked) "makanan" else "minuman"
+
+            if (nama.isEmpty()) {
+                edtNama.error = "Nama menu tidak boleh kosong"
+                edtNama.requestFocus()
+                return@setOnClickListener
+            }
+
+            if (hargaStr.isEmpty()) {
+                edtHarga.error = "Harga wajib diisi"
+                edtHarga.requestFocus()
+                return@setOnClickListener
+            }
+
+            val harga = hargaStr.toLongOrNull()
+            if (harga == null || harga <= 0) {
+                edtHarga.error = "Harga harus berupa angka bulat lebih dari 0"
+                edtHarga.requestFocus()
+                return@setOnClickListener
+            }
+
+            if (stockStr.isEmpty()) {
+                edtStock.error = "Stok wajib diisi"
+                edtStock.requestFocus()
+                return@setOnClickListener
+            }
+
+            val stock = stockStr.toIntOrNull()
+            if (stock == null || stock < 0) {
+                edtStock.error = "Stok harus berupa angka bulat minimal 0"
+                edtStock.requestFocus()
+                return@setOnClickListener
+            }
+
+            dialog.dismiss()
+
+            val json = JSONObject().apply {
+                put("user_id", sessionManager.getUserId())
+                put("nama_menu", nama)
+                put("harga", harga.toDouble())
+                put("stock", stock)
+                put("kategori", kategori)
+                                if (!currentPhotoUrl.isNullOrEmpty()) {
+                    put("foto_url", currentPhotoUrl)
                 }
+                if (!currentPhotoBase64.isNullOrEmpty()) {
+                    put("foto_base64", currentPhotoBase64)
+                }
+            }.toString()
 
-                val json = JSONObject().apply {
-                    put("user_id", sessionManager.getUserId())
-                    put("nama_menu", nama)
-                    put("harga", hargaStr.toDoubleOrNull() ?: 0.0)
-                    put("stock", stockStr.toIntOrNull() ?: 0)
-                    put("kategori", kategori)
-                    if (!currentPhotoBase64.isNullOrEmpty()) {
-                        put("foto_base64", currentPhotoBase64)
-                    }
-                }.toString()
-
-                apiClient.post("/kantin/menu", json) { success, _, err ->
-                    runOnUiThread {
-                        if (success) {
-                            NotificationSoundUtil.playSuccessBeep()
-                            Toast.makeText(this, "Menu baru berhasil ditambahkan ke web & POS!", Toast.LENGTH_SHORT).show()
-                            loadMenus()
-                        } else {
-                            Toast.makeText(this, err ?: "Gagal menambah menu", Toast.LENGTH_SHORT).show()
-                        }
+            apiClient.post("/kantin/menu", json) { success, _, err ->
+                runOnUiThread {
+                    if (success) {
+                        NotificationSoundUtil.playSuccessBeep()
+                        Toast.makeText(this, "Menu baru berhasil ditambahkan ke web & POS!", Toast.LENGTH_SHORT).show()
+                        loadMenus()
+                    } else {
+                        Toast.makeText(this, err ?: "Gagal menambah menu", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
-            .setNegativeButton("Batal", null)
-            .show()
+        }
     }
 
     private fun showEditMenuDialog(menu: MenuModel) {
@@ -408,7 +477,10 @@ class KantinMainActivity : AppCompatActivity() {
         }
 
         // Tampilkan foto eksisting dari web
+        photoRequestId++
         currentPhotoBase64 = null
+        currentPhotoUrl = null
+        isProcessingPhoto = false
         activeImgPreview = imgPreview
         activeCardPreview = cardPreview
         activeTvStatus = tvStatus
@@ -434,79 +506,226 @@ class KantinMainActivity : AppCompatActivity() {
             pickImageLauncher.launch("image/*")
         }
 
-        AlertDialog.Builder(this)
+        val dialog = AlertDialog.Builder(this)
             .setView(dialogView)
-            .setPositiveButton("Perbarui") { _, _ ->
-                val nama = edtNama.text.toString().trim()
-                val hargaStr = edtHarga.text.toString().trim()
-                val stockStr = edtStock.text.toString().trim()
-                val kategori = if (rbMakanan.isChecked) "makanan" else "minuman"
+            .setPositiveButton("Perbarui", null)
+            .setNegativeButton("Batal", null)
+            .create()
 
-                val json = JSONObject().apply {
-                    put("nama_menu", nama)
-                    put("harga", hargaStr.toDoubleOrNull() ?: menu.harga)
-                    put("stock", stockStr.toIntOrNull() ?: menu.stock)
-                    put("kategori", kategori)
-                    if (!currentPhotoBase64.isNullOrEmpty()) {
-                        put("foto_base64", currentPhotoBase64)
+        dialog.setOnDismissListener {
+            photoRequestId++
+            isProcessingPhoto = false
+        }
+        dialog.show()
+
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+            if (isProcessingPhoto) {
+                Toast.makeText(this, "Memproses foto...", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            val nama = edtNama.text.toString().trim()
+            val hargaStr = edtHarga.text.toString().trim()
+            val stockStr = edtStock.text.toString().trim()
+            val kategori = if (rbMakanan.isChecked) "makanan" else "minuman"
+
+            if (nama.isEmpty()) {
+                edtNama.error = "Nama menu tidak boleh kosong"
+                edtNama.requestFocus()
+                return@setOnClickListener
+            }
+
+            if (hargaStr.isEmpty()) {
+                edtHarga.error = "Harga wajib diisi"
+                edtHarga.requestFocus()
+                return@setOnClickListener
+            }
+
+            val harga = hargaStr.toLongOrNull()
+            if (harga == null || harga <= 0) {
+                edtHarga.error = "Harga harus berupa angka bulat lebih dari 0"
+                edtHarga.requestFocus()
+                return@setOnClickListener
+            }
+
+            if (stockStr.isEmpty()) {
+                edtStock.error = "Stok wajib diisi"
+                edtStock.requestFocus()
+                return@setOnClickListener
+            }
+
+            val stock = stockStr.toIntOrNull()
+            if (stock == null || stock < 0) {
+                edtStock.error = "Stok harus berupa angka bulat minimal 0"
+                edtStock.requestFocus()
+                return@setOnClickListener
+            }
+
+            dialog.dismiss()
+
+            val json = JSONObject().apply {
+                put("nama_menu", nama)
+                put("harga", harga.toDouble())
+                put("stock", stock)
+                put("kategori", kategori)
+                                if (!currentPhotoUrl.isNullOrEmpty()) {
+                    put("foto_url", currentPhotoUrl)
+                }
+                if (!currentPhotoBase64.isNullOrEmpty()) {
+                    put("foto_base64", currentPhotoBase64)
+                }
+            }.toString()
+
+            apiClient.post("/kantin/menu/${menu.id}/update", json) { success, _, err ->
+                runOnUiThread {
+                    if (success) {
+                        NotificationSoundUtil.playSuccessBeep()
+                        Toast.makeText(this, "Menu berhasil diperbarui!", Toast.LENGTH_SHORT).show()
+                        loadMenus()
+                    } else {
+                        Toast.makeText(this, err ?: "Gagal memperbarui menu", Toast.LENGTH_SHORT).show()
                     }
-                }.toString()
+                }
+            }
+        }
+    }
 
-                apiClient.post("/kantin/menu/${menu.id}/update", json) { success, _, err ->
-                    runOnUiThread {
-                        if (success) {
-                            NotificationSoundUtil.playSuccessBeep()
-                            Toast.makeText(this, "Menu berhasil diperbarui!", Toast.LENGTH_SHORT).show()
-                            loadMenus()
-                        } else {
-                            Toast.makeText(this, err ?: "Gagal memperbarui menu", Toast.LENGTH_SHORT).show()
+    private fun processBitmapToBase64(bitmap: Bitmap?) {
+        val reqId = photoRequestId
+        if (bitmap == null) {
+            isProcessingPhoto = false
+            Toast.makeText(this, "Foto tidak valid", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        isProcessingPhoto = true
+        activeTvStatus?.text = "Memproses foto..."
+        activeTvStatus?.setTextColor(0xFF64748B.toInt())
+
+        Thread {
+            try {
+                val stream = ByteArrayOutputStream()
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream)
+                val byteArray = stream.toByteArray()
+                val base64 = Base64.encodeToString(byteArray, Base64.NO_WRAP)
+
+                runOnUiThread {
+                    if (reqId == photoRequestId) {
+                        currentPhotoBase64 = base64
+                        activeImgPreview?.setImageBitmap(bitmap)
+                        activeTvStatus?.text = "Mengunggah foto..."
+                        activeTvStatus?.setTextColor(0xFF2563EB.toInt())
+
+                        val fileName = "menu_" + System.currentTimeMillis() + ".jpg"
+                        SupabaseStorageHelper.uploadMenuPhoto(fileName, byteArray) { success, publicUrl, _ ->
+                            if (reqId == photoRequestId) {
+                                isProcessingPhoto = false
+                                if (success && !publicUrl.isNullOrEmpty()) {
+                                    currentPhotoUrl = publicUrl
+                                    activeTvStatus?.text = "Foto siap disimpan (Cloud Storage)"
+                                    activeTvStatus?.setTextColor(0xFF059669.toInt())
+                                } else {
+                                    activeTvStatus?.text = "Foto siap disimpan (Server)"
+                                    activeTvStatus?.setTextColor(0xFF059669.toInt())
+                                }
+                                Toast.makeText(this@KantinMainActivity, "Foto produk siap disimpan!", Toast.LENGTH_SHORT).show()
+                            }
                         }
                     }
                 }
-            }
-            .setNegativeButton("Batal", null)
-            .show()
-    }
-
-    private fun processBitmapToBase64(bitmap: Bitmap) {
-        try {
-            val stream = ByteArrayOutputStream()
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream)
-            val byteArray = stream.toByteArray()
-            currentPhotoBase64 = Base64.encodeToString(byteArray, Base64.NO_WRAP)
-
-            activeTvStatus?.text = "Mengunggah foto..."
-            val fileName = "menu_" + System.currentTimeMillis() + ".jpg"
-            SupabaseStorageHelper.uploadMenuPhoto(fileName, byteArray) { success, publicUrl, _ ->
-                if (success && !publicUrl.isNullOrEmpty()) {
-                    currentPhotoUrl = publicUrl
-                    activeTvStatus?.text = "Foto siap disimpan (Cloud Storage)"
-                    activeTvStatus?.setTextColor(0xFF059669.toInt())
-                } else {
-                    activeTvStatus?.text = "Foto siap disimpan (Server)"
-                    activeTvStatus?.setTextColor(0xFF059669.toInt())
+            } catch (oom: OutOfMemoryError) {
+                runOnUiThread {
+                    if (reqId == photoRequestId) {
+                        isProcessingPhoto = false
+                        activeTvStatus?.text = "Memori tidak cukup"
+                        activeTvStatus?.setTextColor(0xFFEF4444.toInt())
+                        Toast.makeText(this, "Ukuran foto terlalu besar", Toast.LENGTH_SHORT).show()
+                    }
                 }
-                Toast.makeText(this@KantinMainActivity, "Foto produk siap disimpan!", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                runOnUiThread {
+                    if (reqId == photoRequestId) {
+                        isProcessingPhoto = false
+                        activeTvStatus?.text = "Gagal memproses foto"
+                        activeTvStatus?.setTextColor(0xFFEF4444.toInt())
+                        Toast.makeText(this, "Gagal memproses foto", Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
-        } catch (e: Exception) {
-            Toast.makeText(this, "Gagal memproses foto: ${e.message}", Toast.LENGTH_SHORT).show()
-        }
+        }.start()
     }
 
     private fun processUriToBase64(uri: Uri) {
-        try {
-            val inputStream = contentResolver.openInputStream(uri)
-            val bitmap = BitmapFactory.decodeStream(inputStream)
-            inputStream?.close()
+        val reqId = photoRequestId
+        isProcessingPhoto = true
+        activeTvStatus?.text = "Memproses foto..."
+        activeTvStatus?.setTextColor(0xFF64748B.toInt())
 
-            if (bitmap != null) {
-                processBitmapToBase64(bitmap)
-            } else {
-                Toast.makeText(this, "Gagal memuat gambar dari galeri", Toast.LENGTH_SHORT).show()
+        Thread {
+            try {
+                val inputStream = contentResolver.openInputStream(uri)
+                val bitmap = BitmapFactory.decodeStream(inputStream)
+                inputStream?.close()
+
+                if (bitmap != null) {
+                    val stream = ByteArrayOutputStream()
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream)
+                    val byteArray = stream.toByteArray()
+                    val base64 = Base64.encodeToString(byteArray, Base64.NO_WRAP)
+
+                    runOnUiThread {
+                        if (reqId == photoRequestId) {
+                            currentPhotoBase64 = base64
+                            activeImgPreview?.setImageBitmap(bitmap)
+                            activeTvStatus?.text = "Mengunggah foto..."
+                            activeTvStatus?.setTextColor(0xFF2563EB.toInt())
+
+                            val fileName = "menu_" + System.currentTimeMillis() + ".jpg"
+                            SupabaseStorageHelper.uploadMenuPhoto(fileName, byteArray) { success, publicUrl, _ ->
+                                if (reqId == photoRequestId) {
+                                    isProcessingPhoto = false
+                                    if (success && !publicUrl.isNullOrEmpty()) {
+                                        currentPhotoUrl = publicUrl
+                                        activeTvStatus?.text = "Foto siap disimpan (Cloud Storage)"
+                                        activeTvStatus?.setTextColor(0xFF059669.toInt())
+                                    } else {
+                                        activeTvStatus?.text = "Foto siap disimpan (Server)"
+                                        activeTvStatus?.setTextColor(0xFF059669.toInt())
+                                    }
+                                    Toast.makeText(this@KantinMainActivity, "Foto produk siap disimpan!", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    runOnUiThread {
+                        if (reqId == photoRequestId) {
+                            isProcessingPhoto = false
+                            activeTvStatus?.text = "Gagal memuat gambar"
+                            activeTvStatus?.setTextColor(0xFFEF4444.toInt())
+                            Toast.makeText(this, "Gagal memuat gambar dari galeri", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            } catch (oom: OutOfMemoryError) {
+                runOnUiThread {
+                    if (reqId == photoRequestId) {
+                        isProcessingPhoto = false
+                        activeTvStatus?.text = "Memori tidak cukup"
+                        activeTvStatus?.setTextColor(0xFFEF4444.toInt())
+                        Toast.makeText(this, "Ukuran foto terlalu besar", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    if (reqId == photoRequestId) {
+                        isProcessingPhoto = false
+                        activeTvStatus?.text = "Gagal membaca galeri"
+                        activeTvStatus?.setTextColor(0xFFEF4444.toInt())
+                        Toast.makeText(this, "Gagal membaca galeri", Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
-        } catch (e: Exception) {
-            Toast.makeText(this, "Gagal membaca galeri: ${e.message}", Toast.LENGTH_SHORT).show()
-        }
+        }.start()
     }
 
     private fun showDeleteMenuDialog(menu: MenuModel) {

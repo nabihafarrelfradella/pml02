@@ -494,6 +494,11 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="end"
                             android:layout_marginTop="8dp"
+                            android:minHeight="48dp"
+                            android:minWidth="48dp"
+                            android:gravity="center_vertical|end"
+                            android:paddingVertical="8dp"
+                            android:paddingHorizontal="4dp"
                             android:text="Gunakan Nomor Kartu Sandbox Demo"
                             android:textColor="#2563EB"
                             android:textSize="12sp"
@@ -720,12 +725,27 @@
                     style="@style/Widget.MaterialComponents.Button.TextButton" />
             </LinearLayout>
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvMhsAllRiwayat"
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:clipToPadding="false"
-                android:paddingVertical="8dp" />
+                android:layout_height="match_parent">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvMhsAllRiwayat"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clipToPadding="false"
+                    android:paddingVertical="8dp" />
+
+                <TextView
+                    android:id="@+id/tvMhsRiwayatEmpty"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="Tidak ada riwayat transaksi"
+                    android:textColor="#94A3B8"
+                    android:textSize="14sp"
+                    android:visibility="gone" />
+            </FrameLayout>
 
             <TextView
                 android:id="@+id/tvMhsAllRiwayatEmpty"

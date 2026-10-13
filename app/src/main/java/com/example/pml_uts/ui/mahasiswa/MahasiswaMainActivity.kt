@@ -12,14 +12,21 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.Toast
-import android.widget.TextView
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.pml_uts.R
 import com.example.pml_uts.data.local.SessionManager
@@ -105,9 +112,19 @@ class MahasiswaMainActivity : AppCompatActivity() {
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         binding = ActivityMahasiswaMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = false
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            binding.toolbarMhs.updateLayoutParams { height = ViewGroup.LayoutParams.WRAP_CONTENT }
+            binding.toolbarMhs.updatePadding(top = insets.top)
+            binding.mhsBottomNav.updatePadding(bottom = insets.bottom)
+            windowInsets
+        }
 
         setSupportActionBar(binding.toolbarMhs)
         apiClient = ApiClient(this)
@@ -283,6 +300,7 @@ class MahasiswaMainActivity : AppCompatActivity() {
             binding.btnFilterDate.text = "Pilih Rentang Tanggal"
             allRiwayatAdapter.updateData(fullRiwayatList)
             binding.tvMhsAllRiwayatEmpty.visibility = if (fullRiwayatList.isEmpty()) View.VISIBLE else View.GONE
+            binding.tvMhsRiwayatEmpty.visibility = if (fullRiwayatList.isEmpty()) View.VISIBLE else View.GONE
         }
     }
 
@@ -823,6 +841,7 @@ class MahasiswaMainActivity : AppCompatActivity() {
                         fullRiwayatList = apiClient.gson.fromJson(arrayStr, type)
                         allRiwayatAdapter.updateData(fullRiwayatList)
                         binding.tvMhsAllRiwayatEmpty.visibility = if (fullRiwayatList.isEmpty()) View.VISIBLE else View.GONE
+                        binding.tvMhsRiwayatEmpty.visibility = if (fullRiwayatList.isEmpty()) View.VISIBLE else View.GONE
                     } catch (e: Exception) {
                         e.printStackTrace()
                     }
@@ -835,6 +854,7 @@ class MahasiswaMainActivity : AppCompatActivity() {
         super.onDestroy()
         realTimeHandler.removeCallbacks(realTimeRunnable)
         isPollingEnroll = false
+        handler.removeCallbacksAndMessages(null)
         enrollDialog?.dismiss()
     }
 
