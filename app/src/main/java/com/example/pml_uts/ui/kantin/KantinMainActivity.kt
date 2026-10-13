@@ -604,32 +604,28 @@ class KantinMainActivity : AppCompatActivity() {
         Thread {
             try {
                 val stream = ByteArrayOutputStream()
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream)
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 70, stream)
                 val byteArray = stream.toByteArray()
                 val base64 = Base64.encodeToString(byteArray, Base64.NO_WRAP)
 
                 runOnUiThread {
                     if (reqId == photoRequestId) {
                         currentPhotoBase64 = base64
+                        isProcessingPhoto = false
                         activeImgPreview?.setImageBitmap(bitmap)
-                        activeTvStatus?.text = "Mengunggah foto..."
-                        activeTvStatus?.setTextColor(0xFF2563EB.toInt())
+                        activeTvStatus?.text = "Foto siap disimpan"
+                        activeTvStatus?.setTextColor(0xFF059669.toInt())
+                        Toast.makeText(this@KantinMainActivity, "Foto produk siap!", Toast.LENGTH_SHORT).show()
 
-                        val fileName = "menu_" + System.currentTimeMillis() + ".jpg"
-                        SupabaseStorageHelper.uploadMenuPhoto(fileName, byteArray) { success, publicUrl, _ ->
-                            if (reqId == photoRequestId) {
-                                isProcessingPhoto = false
-                                if (success && !publicUrl.isNullOrEmpty()) {
+                        // Bonus: upload ke Supabase di background (tidak memblokir simpan)
+                        try {
+                            val fileName = "menu_" + System.currentTimeMillis() + ".jpg"
+                            SupabaseStorageHelper.uploadMenuPhoto(fileName, byteArray) { success, publicUrl, _ ->
+                                if (reqId == photoRequestId && success && !publicUrl.isNullOrEmpty()) {
                                     currentPhotoUrl = publicUrl
-                                    activeTvStatus?.text = "Foto siap disimpan (Cloud Storage)"
-                                    activeTvStatus?.setTextColor(0xFF059669.toInt())
-                                } else {
-                                    activeTvStatus?.text = "Foto siap disimpan (Server)"
-                                    activeTvStatus?.setTextColor(0xFF059669.toInt())
                                 }
-                                Toast.makeText(this@KantinMainActivity, "Foto produk siap disimpan!", Toast.LENGTH_SHORT).show()
                             }
-                        }
+                        } catch (_: Exception) { }
                     }
                 }
             } catch (oom: OutOfMemoryError) {
@@ -668,32 +664,28 @@ class KantinMainActivity : AppCompatActivity() {
 
                 if (bitmap != null) {
                     val stream = ByteArrayOutputStream()
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream)
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 70, stream)
                     val byteArray = stream.toByteArray()
                     val base64 = Base64.encodeToString(byteArray, Base64.NO_WRAP)
 
                     runOnUiThread {
                         if (reqId == photoRequestId) {
                             currentPhotoBase64 = base64
+                            isProcessingPhoto = false
                             activeImgPreview?.setImageBitmap(bitmap)
-                            activeTvStatus?.text = "Mengunggah foto..."
-                            activeTvStatus?.setTextColor(0xFF2563EB.toInt())
+                            activeTvStatus?.text = "Foto siap disimpan"
+                            activeTvStatus?.setTextColor(0xFF059669.toInt())
+                            Toast.makeText(this@KantinMainActivity, "Foto produk siap!", Toast.LENGTH_SHORT).show()
 
-                            val fileName = "menu_" + System.currentTimeMillis() + ".jpg"
-                            SupabaseStorageHelper.uploadMenuPhoto(fileName, byteArray) { success, publicUrl, _ ->
-                                if (reqId == photoRequestId) {
-                                    isProcessingPhoto = false
-                                    if (success && !publicUrl.isNullOrEmpty()) {
+                            // Bonus: upload ke Supabase di background (tidak memblokir simpan)
+                            try {
+                                val fileName = "menu_" + System.currentTimeMillis() + ".jpg"
+                                SupabaseStorageHelper.uploadMenuPhoto(fileName, byteArray) { success, publicUrl, _ ->
+                                    if (reqId == photoRequestId && success && !publicUrl.isNullOrEmpty()) {
                                         currentPhotoUrl = publicUrl
-                                        activeTvStatus?.text = "Foto siap disimpan (Cloud Storage)"
-                                        activeTvStatus?.setTextColor(0xFF059669.toInt())
-                                    } else {
-                                        activeTvStatus?.text = "Foto siap disimpan (Server)"
-                                        activeTvStatus?.setTextColor(0xFF059669.toInt())
                                     }
-                                    Toast.makeText(this@KantinMainActivity, "Foto produk siap disimpan!", Toast.LENGTH_SHORT).show()
                                 }
-                            }
+                            } catch (_: Exception) { }
                         }
                     }
                 } else {
